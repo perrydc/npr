@@ -1,6 +1,13 @@
 NPR
 ===
 
+This module provides a simple framework for working with NPR's cloud services.
+|If you're new to python, the simplist way to get started is to install anaconda
+on your computer (https://www.continuum.io/downloads) and open a new notebook in
+Jupyter notebooks (included in the anaconda package).  
+|You can then install this module via:
+	pip install npr
+
 Setup:
 ------
 
@@ -59,9 +66,9 @@ You can also use a reverse lookup to find the keys to your own variables::
     >>> for episode in search.response['items'][0]['items']:
 	...		print(episode['attributes']['audioTitle'])
 	
-	| Ep. 66: Liar, Liar
-	| Episode 65: Tunnel Vision
-	| Ep. 64: I'm Right, You're Wrong
+	Ep. 66: Liar, Liar
+	Episode 65: Tunnel Vision
+	Ep. 64: I'm Right, You're Wrong
 
 Authentication functions:
 -------------------------
@@ -86,5 +93,5 @@ Endpoint helper functions:
 	| <YOUR OBJECT NAME> **.pretty()** - prints the json output in human-readable form
 	| <YOUR OBJECT NAME> **.find('your json value')** - returns the json key path for the value you entered
 	
-Full endpoint documentation is available at <http://dev.npr.org>
-----------------------------------------------------------------
+Full endpoint documentation is available at http://dev.npr.org
+--------------------------------------------------------------
