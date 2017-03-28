@@ -2,10 +2,12 @@ NPR
 ===
 
 This module provides a simple framework for working with NPR's cloud services.
-| If you're new to python, the simplist way to get started is to install anaconda
+
+If you're new to python, the simplist way to get started is to install anaconda
 on your computer (https://www.continuum.io/downloads) and open a new notebook in
 Jupyter notebooks (included in the anaconda package).  
-|You can then install this module via:
+
+You can then install this module via:
 	pip install npr
 
 Setup:
