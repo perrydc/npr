@@ -56,9 +56,9 @@ You can also use a reverse lookup to find the keys to your own variables.
     >>> for episode in search.response['items'][0]['items']:
 	...		print(episode['attributes']['audioTitle'])
 	
-	Ep. 66: Liar, Liar 
-	Episode 65: Tunnel Vision 
-	Ep. 64: I'm Right, You're Wrong
+	Ep. 66: Liar, Liar \n
+	Episode 65: Tunnel Vision \n
+	Ep. 64: I'm Right, You're Wrong \n
 
 Authentication functions:
 
