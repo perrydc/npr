@@ -1,5 +1,15 @@
+from __future__ import print_function
+from __future__ import unicode_literals
+from __future__ import division
+from __future__ import absolute_import
+from builtins import input
+from builtins import open
+from builtins import str
+from builtins import object
+from future import standard_library
+standard_library.install_aliases()
 import requests,json,re,os,ast,sys
-class Api:
+class Api(object):
     def __init__(self):
         try:
             configfile = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'npr.conf')
