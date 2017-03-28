@@ -45,7 +45,7 @@ Custom variables:
 You can also use a reverse lookup to find the keys to your own variables::
 
     >>> search = npr.Search('Hidden Brain')
->>> search.pretty()
+	>>> search.pretty()
 	
 	. . .
 	  "audioTitle": "Ep. 64: I'm Right, You're Wrong",
