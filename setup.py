@@ -1,8 +1,4 @@
-from setuptools import setup,find_packages
-
-def readme():
-    with open('README.rst') as f:
-        return f.read()
+from setuptools import setup, find_packages
 
 setup(name='npr',
       version='0.1.0',
@@ -26,9 +22,8 @@ setup(name='npr',
       author='Demian Perry',
       author_email='dperry@npr.org',
       license='MIT',
-      packages=find_packages(),
+      py_modules=['npr'],
       install_requires=[
-          'requests','json','re','os','ast','sys','builtins','future'
+          'requests'
       ],
-      include_package_data=True,
-      zip_safe=False)
+)
