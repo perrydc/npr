@@ -24,6 +24,6 @@ setup(name='npr',
       license='MIT',
       py_modules=['npr'],
       install_requires=[
-          'requests','future',
+          'requests','requests[security];python_version<"2.9"','future',
       ],
 )
