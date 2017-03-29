@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(name='npr',
-      version='0.1.2',
+      version='0.1.3',
       description='NPR cloud framework',
       long_description='Self-authenticating module for accessing NPR APIs in Python.',
       classifiers=[
