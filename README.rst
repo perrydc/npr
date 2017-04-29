@@ -21,7 +21,7 @@ Begin by authenticating your app.  Auth will walk you through key creation.
 	  4. Select that application and enter your credentials below
 	Application ID:
 
-Once verified, you must login.
+Once verified, you must login. 
 
     >>> npr.login()
 	
