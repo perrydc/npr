@@ -8,11 +8,12 @@ from builtins import str
 from builtins import object
 from future import standard_library
 standard_library.install_aliases()
-import requests,json,re,os,ast,sys
+import requests,json,re,os,ast,sys,time,datetime
+configfile = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'npr.conf')
+#configfile = 'npr.conf' #dev mode (comment out above)
 class Api(object):
     def __init__(self):
         try:
-            configfile = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'npr.conf')
             f=open(configfile,'r')
             config = ast.literal_eval(f.read())
         except:
@@ -68,22 +69,41 @@ class User(Api):
         self.endpoint = self.domain + "/identity/v2/user"
         self.response = requests.get(self.endpoint,headers=self.headers).json()
 
-class Recommend(Api):
-    def __init__(self):
-        Api.__init__(self)
-        self.endpoint = self.domain + "/listening/v2/recommendations"
-        self.response = requests.get(self.endpoint,headers=self.headers).json()
-
 class Search(Api):
     def __init__(self, query):
         Api.__init__(self)
         self.endpoint = self.domain + "/listening/v2/search/recommendations?searchTerms=" + query
         self.response = requests.get(self.endpoint,headers=self.headers).json()
 
-class Station(Api):
-    def __init__(self, query):
+class Channels(Api):
+    def __init__(self, exploreOnly='false'):
         Api.__init__(self)
-        self.endpoint = self.domain + "/stationfinder/v3/stations?q=" + query
+        self.endpoint = self.domain + "/listening/v2/channels?exploreOnly=" + exploreOnly
+        self.response = requests.get(self.endpoint,headers=self.headers).json()
+    def fetch(self,n):
+        self.endpoint = self.response['items'][n]['href']
+        self.row = Recommend(self.endpoint,self.headers)
+        
+class Recommend(Api):
+    def __init__(self,endpoint,headers):
+        self.endpoint = endpoint
+        self.response = requests.get(self.endpoint,headers=headers).json()
+
+class Agg(Api):
+    def __init__(self, aggId):
+        Api.__init__(self)
+        self.endpoint = self.domain + "/listening/v2/aggregation/" + aggId + "/recommendations"
+        self.response = requests.get(self.endpoint,headers=self.headers).json()        
+        
+class Station(Api):
+    def __init__(self, query, lon=0):
+        Api.__init__(self)
+        if lon != 0:
+            self.endpoint = self.domain + "/stationfinder/v3/stations/?lat=" + str(query) + "&lon=" + str(lon)
+        elif type(query) == int:
+            self.endpoint = self.domain + "/stationfinder/v3/stations/" + str(query)
+        else:
+            self.endpoint = self.domain + "/stationfinder/v3/stations?q=" + query
         self.response = requests.get(self.endpoint,headers=self.headers).json()
     def getstream(self):
         for stream in self.response['items'][0]['links']['streams']:
@@ -114,6 +134,42 @@ class Station(Api):
           stream = s
         return stream
 
+class One(Api):
+    def __init__(self):
+        Api.__init__(self)
+        self.endpoint = self.domain + "/listening/v2/recommendations"
+        self.response = requests.get(self.endpoint,headers=self.headers).json()
+        self.setVars()
+        #print(self.pretty())
+    def setVars(self):
+        self.audio = self.response['items'][0]['links']['audio'][0]['href']
+        self.title = self.response['items'][0]['attributes']['title']
+        self.start = datetime.datetime.utcnow()
+        self.post = {
+            'mediaId':self.response['items'][0]['attributes']['rating']['mediaId'],
+            'origin':self.response['items'][0]['attributes']['rating']['origin'],
+            'duration':self.response['items'][0]['attributes']['duration'],
+            'channel':self.response['items'][0]['attributes']['rating']['channel'],
+            'cohort':self.response['items'][0]['attributes']['rating']['cohort']
+        }
+    def postTime(self):
+        timestamp = datetime.datetime.utcnow()
+        elapsed = int((timestamp - self.start).total_seconds())
+        self.post.update({'timestamp':timestamp.strftime('%Y-%m-%dT%H:%M:%S%z')})
+        self.post.update({'elapsed':elapsed})
+    def advancePlayer(self):
+        self.postTime()
+        self.endpoint = self.response['items'][0]['links']['recommendations'][0]['href']
+        self.data = json.dumps([self.post])
+        self.response = requests.post(self.endpoint, headers=self.headers, data=self.data).json()
+        self.setVars()        
+    def skip(self):
+        self.post.update({'rating':'SKIP'})
+        self.advancePlayer()
+    def complete(self):
+        self.post.update({'rating':'COMPLETED'})
+        self.advancePlayer()
+
 def auth():
     print("To authenticate your app:")
     print("  1. LOGIN to http://dev.npr.org (if it's your first time, you'll need to register.)")
@@ -123,17 +179,14 @@ def auth():
     id = input("Application ID:")
     secret = input("Application Secret:")
     config = "{'id':'" + id + "','secret':'" + secret + "'}"
-    configfile = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'npr.conf')
     f=open(configfile,'w+')
     f.write(config)
     print('App authenticated.  Now run "npr.login()" to get a bearer token')
 def deauth():
-    configfile = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'npr.conf')
     os.remove(configfile)
     print('app deauthed')
 def login():
     try:
-        configfile = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'npr.conf')
         f=open(configfile,'r')
     except:
         print('Authenticate your app. Try: "npr.auth()"')
@@ -153,13 +206,11 @@ def login():
     tokenData = {'client_id':id,'client_secret':secret,'code':deviceCodeJson['device_code'],'grant_type':'device_code'}
     tokenJson = requests.post(tokenEndpoint, headers=tokenHeaders, data = tokenData).json()
     config = "{'id':'" + id + "','secret':'" + secret + "','token':'" + tokenJson['access_token'] + "'}"
-    configfile = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'npr.conf')
     f=open(configfile,'w+')
     f.write(config)
     print('User logged in and stored locally')
 def logout():
     try:
-        configfile = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'npr.conf')
         f=open(configfile,'r')
     except:
         print('No config.  User logged out.')
@@ -169,15 +220,24 @@ def logout():
     f=open(configfile,'w+')
     f.write(conf)
     print('User logged off.')
-def npr():
-        print("s = npr.Station('wamu')")
-        print("  s.pretty()")
-        print("  s.find('88.5')")
-        print("  print(s.live())")
-        print("a = npr.Search('hidden')")
-        print("r = npr.Recommend()")
-        print("u = npr.User()")
-        print("npr.auth()")
-        print("npr.deauth()")
-        print("npr.login()")
-        print("npr.logout()")
+def docs():
+    print("s = npr.Station('wamu') | s = npr.Station('22205')")
+    print("s = npr.Station(305) | s = npr.Station(38.9072,-77.0369)")
+    print("  s.pretty() <-this is a generic DISPLAY function that works on all classes")
+    print("  s.find('88.5') <-this is a generic REVERSE LOOKUP function that works on all classes")
+    print("  print(s.live())")
+    print("player = npr.One()")
+    print("  player.audio")
+    print("  player.title")
+    print("  player.skip() | player.complete()")
+    print("user = npr.User()")
+    print("query = npr.Search('hidden')")
+    print("hiddenBrain = Agg('510308') - the aggId is listed as the 'affiliation' in search")
+    print("  hiddenBrain.pretty()")
+    print("explore = npr.Channels()")
+    print("  explore.fetch(2) - fetch segments from third row of explore list")
+    print("  explore.row.pretty()")
+    print("npr.auth()")
+    print("npr.deauth()")
+    print("npr.login()")
+    print("npr.logout()")
