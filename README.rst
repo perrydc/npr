@@ -20,6 +20,7 @@ Begin by authenticating your app.  Auth will walk you through key creation.
 	  3. Create a new application
 	  4. Select that application and enter your credentials below
 	Application ID:
+	Application Secret:
 
 Once verified, you must login. 
 
@@ -27,7 +28,8 @@ Once verified, you must login.
 	
 	| Go to https://secure.npr.org/device login and enter:
 	| Z3SDM6
-	| When finished, cursor in and press enter:
+
+This will poll the npr auth server every 5 seconds until you login and it gets a token.
 
 Example data fetch:
 -------------------

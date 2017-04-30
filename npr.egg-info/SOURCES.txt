@@ -1,0 +1,10 @@
+MANIFEST.in
+README.rst
+setup.cfg
+setup.py
+npr/__init__.py
+npr.egg-info/PKG-INFO
+npr.egg-info/SOURCES.txt
+npr.egg-info/dependency_links.txt
+npr.egg-info/requires.txt
+npr.egg-info/top_level.txt
