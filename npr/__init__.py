@@ -10,7 +10,7 @@ from future import standard_library
 standard_library.install_aliases()
 import requests,json,re,os,ast,sys,time,datetime
 configfile = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'npr.conf')
-#configfile = 'npr.conf' #dev mode (comment out above) 
+#configfile = 'npr.conf' #dev mode (comment out above) 1.0.9
 class Api(object):
     def __init__(self):
         try:
@@ -185,6 +185,16 @@ def auth():
 def deauth():
     os.remove(configfile)
     print('app deauthed')
+def poll(tokenEndpoint,tokenHeaders,tokenData):
+    tokenJson = requests.post(tokenEndpoint, headers=tokenHeaders, data = tokenData).json()
+    if 'access_token' in tokenJson:
+        config = "{'id':'" + id + "','secret':'" + secret + "','token':'" + tokenJson['access_token'] + "'}"
+        f=open(configfile,'w+')
+        f.write(config)
+        print('User logged in and stored locally')
+    else:
+        time.sleep(5)
+        poll(tokenEndpoint,tokenHeaders,tokenData)
 def login():
     try:
         f=open(configfile,'r')
@@ -200,15 +210,10 @@ def login():
     deviceCodeJson = requests.post(deviceCodeEndpoint, headers=deviceCodeHeaders, data = deviceCodeData).json()
     print("Go to " + deviceCodeJson['verification_uri'] + " login and enter:")
     print(deviceCodeJson['user_code'])
-    pause = input("When finished, type 'done' and press enter:")
     tokenEndpoint = 'https://api.npr.org/authorization/v2/token'
     tokenHeaders = {'Accept': 'application/json'}
     tokenData = {'client_id':id,'client_secret':secret,'code':deviceCodeJson['device_code'],'grant_type':'device_code'}
-    tokenJson = requests.post(tokenEndpoint, headers=tokenHeaders, data = tokenData).json()
-    config = "{'id':'" + id + "','secret':'" + secret + "','token':'" + tokenJson['access_token'] + "'}"
-    f=open(configfile,'w+')
-    f.write(config)
-    print('User logged in and stored locally')
+    poll(tokenEndpoint,tokenHeaders,tokenData)
 def logout():
     try:
         f=open(configfile,'r')
