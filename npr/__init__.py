@@ -10,7 +10,7 @@ from future import standard_library
 standard_library.install_aliases()
 import requests,json,re,os,ast,sys,time,datetime
 configfile = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'npr.conf')
-#configfile = 'npr.conf' #dev mode (comment out above) 1.0.9
+#configfile = 'npr.conf' #dev mode (comment out above) 1.0.8
 class Api(object):
     def __init__(self):
         try:
