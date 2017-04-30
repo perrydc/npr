@@ -27,4 +27,3 @@ setup(name='npr',
           'requests','future',
       ],
 )
-
