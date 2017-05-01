@@ -11,7 +11,7 @@ from future import standard_library
 standard_library.install_aliases()
 import requests,json,re,os,ast,sys,time,datetime
 configfile = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'npr.conf')
-#configfile = 'npr.conf' #dev mode (comment out above) 1.1.11
+#configfile = 'npr.conf' #dev mode (comment out above) 1.1.12
 class Api(object):
     def __init__(self):
         try:
@@ -142,8 +142,21 @@ class One(Api):
         self.response = requests.get(self.endpoint,headers=self.headers).json()
         self.setVars()
         #print(self.pretty())
+    def getaudio(self):
+        aac = ""
+        mp3 = ""
+        for audio in self.response['items'][0]['links']['audio']:
+         if audio['content-type'] == "audio/aac":
+          aac = audio['href']
+         if audio['content-type'] == "audio/mp3" and 'rel' not in audio:
+          mp3 = audio['href']
+        return mp3,aac
     def setVars(self):
-        self.audio = self.response['items'][0]['links']['audio'][0]['href']
+        self.mp3,self.aac = self.getaudio()
+        if self.aac != "":
+            self.audio = self.aac
+        else:
+            self.audio = self.mp3
         self.title = self.response['items'][0]['attributes']['title']
         self.start = datetime.datetime.utcnow()
         self.post = {
@@ -186,7 +199,7 @@ def auth():
 def deauth():
     os.remove(configfile)
     print('app deauthed')
-def poll(tokenEndpoint,tokenHeaders,tokenData):
+def poll(tokenEndpoint,tokenHeaders,tokenData,id,secret):
     tokenJson = requests.post(tokenEndpoint, headers=tokenHeaders, data = tokenData).json()
     if 'access_token' in tokenJson:
         config = "{'id':'" + id + "','secret':'" + secret + "','token':'" + tokenJson['access_token'] + "'}"
@@ -195,7 +208,7 @@ def poll(tokenEndpoint,tokenHeaders,tokenData):
         print('User logged in and stored locally')
     else:
         time.sleep(5)
-        poll(tokenEndpoint,tokenHeaders,tokenData)
+        poll(tokenEndpoint,tokenHeaders,tokenData,id,secret)
 def login():
     try:
         f=open(configfile,'r')
@@ -214,7 +227,7 @@ def login():
     tokenEndpoint = 'https://api.npr.org/authorization/v2/token'
     tokenHeaders = {'Accept': 'application/json'}
     tokenData = {'client_id':id,'client_secret':secret,'code':deviceCodeJson['device_code'],'grant_type':'device_code'}
-    poll(tokenEndpoint,tokenHeaders,tokenData)
+    poll(tokenEndpoint,tokenHeaders,tokenData,id,secret)
 def logout():
     try:
         f=open(configfile,'r')
