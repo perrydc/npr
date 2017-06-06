@@ -10,25 +10,142 @@ from builtins import object
 from future import standard_library
 standard_library.install_aliases()
 import requests,json,re,os,ast,sys,time,datetime
+
 configfile = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'npr.conf')
-#configfile = 'npr.conf' #dev mode (comment out above) 1.1.12
+#configfile = 'npr.conf' #dev mode (comment out above) 1.2.0
+
+def promptauth():
+    print("To authenticate your app:")
+    print("  1. LOGIN to http://dev.npr.org (if it's your first time, you'll need to register.)")
+    print("  2. Open the dev console (drop down in the top right corner of dev center)")
+    print("  3. Create a new application")
+    print("  4. Select that application and enter your credentials below")
+    id = input("Application ID:")
+    secret = input("Application Secret:")
+    return id,secret
+
+def clientauth():
+    config = {}
+    config['id'], config['secret'] = promptauth()
+    tokenEndpoint = 'https://api.npr.org/authorization/v2/token'
+    tokenHeaders = {'Accept': 'application/json'}
+    tokenData = {'client_id':config['id'],'client_secret':config['secret'],'grant_type':'client_credentials'}
+    tokenJson = requests.post(tokenEndpoint, headers=tokenHeaders, data = tokenData).json()
+    config['token'] = tokenJson['access_token']
+    f=open(configfile,'w+')
+    f.write(str(config))
+    print(json.dumps(tokenJson, sort_keys=True, indent=2, separators=(',', ': ')))
+
+def auth():
+    config = {}
+    config['id'],config['secret'] = promptauth()
+    f=open(configfile,'w+')
+    f.write(str(config))
+    print("now type 'npr.login() to login your user'")
+    
+def deauth():
+    os.remove(configfile)
+    print('app deauthed')
+    
+def poll(tokenEndpoint,tokenHeaders,tokenData):
+    tokenJson = requests.post(tokenEndpoint, headers=tokenHeaders, data = tokenData).json()
+    if 'access_token' in tokenJson:
+        config['token'] = tokenJson['access_token']
+        config['expires_in'] = tokenJson['expires_in']
+        config['refresh_token'] = tokenJson['refresh_token']
+        f=open(configfile,'w+')
+        f.write(str(config))
+        print('User logged in and stored locally')
+    else:
+        time.sleep(5)
+        poll(tokenEndpoint,tokenHeaders,tokenData)
+        
+def login():
+    scope = 'identity.readonly identity.write listening.readonly listening.write localactivation'
+    deviceCodeEndpoint = 'https://api.npr.org/authorization/v2/device'
+    tokenEndpoint = 'https://api.npr.org/authorization/v2/token'
+    headers = {'Accept': 'application/json'}
+    if os.path.isfile(configfile):
+        f=open(configfile,'r')
+        config = ast.literal_eval(f.read())
+        if 'id' in config and 'secret' in config:
+            deviceCodeData = {'client_id':config['id'],'client_secret':config['secret'],'scope':scope}
+            deviceCodeJson = requests.post(deviceCodeEndpoint, headers=headers, data = deviceCodeData).json()
+            tokenData = {'client_id':config['id'],'client_secret':config['secret'],'code':deviceCodeJson['device_code'],'grant_type':'device_code'}
+            print("Go to " + deviceCodeJson['verification_uri'] + " login and enter:")
+            print(deviceCodeJson['user_code'])
+            poll(tokenEndpoint,headers,tokenData)
+        else:
+            auth()
+    else:
+        auth()
+           
+def logout():
+    if os.path.isfile(configfile):
+        f=open(configfile,'r')
+        config = ast.literal_eval(f.read())
+        config.pop('token', None)
+        f=open(configfile,'w+')
+        f.write(str(conf))
+        print('User logged off.')
+    else:
+        print('No config.  User logged out.')
+
+if os.path.isfile(configfile):
+    f=open(configfile,'r')
+    config = ast.literal_eval(f.read())
+    if 'id' in config and 'secret' in config:
+        if 'token' not in config:
+            print('No token.  Try npr.login()')
+    else:
+        print('app ID and/or app secret is missing.  Try npr.clientauth() or npr.auth() to access user data')
+else:
+    print('app ID and/or app secret is missing.  Try npr.clientauth() or npr.auth() to access user data')
+
+def testr(endpoint,headers):
+    response = requests.get(endpoint,headers=headers).json()
+    if errors(response) == -1:
+        refresh()
+        headers = {"Accept":"application/json","Authorization":"Bearer " + config['token']}
+        response = requests.get(endpoint,headers=headers).json()
+        return response
+    elif errors(response) > 0:
+        print(json.dumps(response, sort_keys=True, indent=2, separators=(',', ': ')))
+        return response
+    else:
+        return response
+
+def errors(response):
+    c = 0
+    if 'errors' in response:
+        for error in response['errors']:
+            if bool(re.match(r'^401',str(error['code']))):
+                return -1
+            else:
+                c += 1
+    return c
+        
+def refresh():
+    if 'refresh_token' in config:
+        tokenEndpoint = 'https://api.npr.org/authorization/v2/token'
+        tokenHeaders = {'Accept': 'application/json'}
+        tokenData = {'client_id':config['id'],'client_secret':config['secret'],'grant_type':'refresh_token','refresh_token':config['refresh_token']}
+        tokenJson = requests.post(tokenEndpoint, headers=tokenHeaders, data = tokenData).json()
+        config['token'] = tokenJson['access_token']
+        config['expires_in'] = tokenJson['expires_in']
+        config['refresh_token'] = tokenJson['refresh_token']
+        f=open(configfile,'w+')
+        f.write(str(config))
+        #print('User logged in and stored locally')
+    else:
+        print('unauthorized.  Try deauth() then auth().')
+    
 class Api(object):
     def __init__(self):
-        try:
-            f=open(configfile,'r')
-            config = ast.literal_eval(f.read())
-        except:
-            print('Authenticate your app and login.  Try:')
-            print('  npr.auth()')
-            print('  npr.login()')
-        try:
-            token = config['token']
-        except:
-            print('Login your user.  Try:')
-            print('  npr.login()')
-        self.token = token
-        self.domain = "https://api.npr.org"
+        self.domain = "https://api.npr.org"        
+        self.token = config['token']
         self.headers = {"Accept":"application/json","Authorization":"Bearer " + self.token}
+            
     def pretty(self):
         print(json.dumps(self.response, sort_keys=True, indent=2, separators=(',', ': ')))
     def view(self,tree, path='.response'):
@@ -68,19 +185,19 @@ class User(Api):
     def __init__(self):
         Api.__init__(self)
         self.endpoint = self.domain + "/identity/v2/user"
-        self.response = requests.get(self.endpoint,headers=self.headers).json()
+        self.response = testr(self.endpoint,self.headers)
 
 class Search(Api):
     def __init__(self, query):
         Api.__init__(self)
         self.endpoint = self.domain + "/listening/v2/search/recommendations?searchTerms=" + query
-        self.response = requests.get(self.endpoint,headers=self.headers).json()
+        self.response = testr(self.endpoint,self.headers)
 
 class Channels(Api):
     def __init__(self, exploreOnly='false'):
         Api.__init__(self)
         self.endpoint = self.domain + "/listening/v2/channels?exploreOnly=" + exploreOnly
-        self.response = requests.get(self.endpoint,headers=self.headers).json()
+        self.response = testr(self.endpoint,self.headers)
     def fetch(self,n):
         self.endpoint = self.response['items'][n]['href']
         self.row = Recommend(self.endpoint,self.headers)
@@ -88,13 +205,13 @@ class Channels(Api):
 class Recommend(Api):
     def __init__(self,endpoint,headers):
         self.endpoint = endpoint
-        self.response = requests.get(self.endpoint,headers=headers).json()
+        self.response = testr(self.endpoint,self.headers)
 
 class Agg(Api):
     def __init__(self, aggId):
         Api.__init__(self)
         self.endpoint = self.domain + "/listening/v2/aggregation/" + aggId + "/recommendations"
-        self.response = requests.get(self.endpoint,headers=self.headers).json()        
+        self.response = testr(self.endpoint,self.headers)        
         
 class Station(Api):
     def __init__(self, query, lon=0):
@@ -105,7 +222,7 @@ class Station(Api):
             self.endpoint = self.domain + "/stationfinder/v3/stations/" + str(query)
         else:
             self.endpoint = self.domain + "/stationfinder/v3/stations?q=" + query
-        self.response = requests.get(self.endpoint,headers=self.headers).json()
+        self.response = testr(self.endpoint,self.headers)
     def getstream(self):
         for stream in self.response['items'][0]['links']['streams']:
          if stream['isPrimaryStream'] and stream['typeId'] == "10":
@@ -139,7 +256,7 @@ class One(Api):
     def __init__(self):
         Api.__init__(self)
         self.endpoint = self.domain + "/listening/v2/recommendations"
-        self.response = requests.get(self.endpoint,headers=self.headers).json()
+        self.response = testr(self.endpoint,self.headers)
         self.setVars()
         #print(self.pretty())
     def getaudio(self):
@@ -184,61 +301,6 @@ class One(Api):
         self.post.update({'rating':'COMPLETED'})
         self.advancePlayer()
 
-def auth():
-    print("To authenticate your app:")
-    print("  1. LOGIN to http://dev.npr.org (if it's your first time, you'll need to register.)")
-    print("  2. Open the dev console (drop down in the top right corner of dev center)")
-    print("  3. Create a new application")
-    print("  4. Select that application and enter your credentials below")
-    id = input("Application ID:")
-    secret = input("Application Secret:")
-    config = "{'id':'" + id + "','secret':'" + secret + "'}"
-    f=open(configfile,'w+')
-    f.write(config)
-    print('App authenticated.  Now run "npr.login()" to get a bearer token')
-def deauth():
-    os.remove(configfile)
-    print('app deauthed')
-def poll(tokenEndpoint,tokenHeaders,tokenData,id,secret):
-    tokenJson = requests.post(tokenEndpoint, headers=tokenHeaders, data = tokenData).json()
-    if 'access_token' in tokenJson:
-        config = "{'id':'" + id + "','secret':'" + secret + "','token':'" + tokenJson['access_token'] + "'}"
-        f=open(configfile,'w+')
-        f.write(config)
-        print('User logged in and stored locally')
-    else:
-        time.sleep(5)
-        poll(tokenEndpoint,tokenHeaders,tokenData,id,secret)
-def login():
-    try:
-        f=open(configfile,'r')
-    except:
-        print('Authenticate your app. Try: "npr.auth()"')
-    config = ast.literal_eval(f.read())
-    id = config['id']
-    secret = config['secret']
-    scope = 'identity.readonly identity.write listening.readonly listening.write localactivation'
-    deviceCodeEndpoint = 'https://api.npr.org/authorization/v2/device'
-    deviceCodeHeaders = {'Accept': 'application/json'}
-    deviceCodeData = {'client_id':id,'client_secret':secret,'scope':scope}
-    deviceCodeJson = requests.post(deviceCodeEndpoint, headers=deviceCodeHeaders, data = deviceCodeData).json()
-    print("Go to " + deviceCodeJson['verification_uri'] + " login and enter:")
-    print(deviceCodeJson['user_code'])
-    tokenEndpoint = 'https://api.npr.org/authorization/v2/token'
-    tokenHeaders = {'Accept': 'application/json'}
-    tokenData = {'client_id':id,'client_secret':secret,'code':deviceCodeJson['device_code'],'grant_type':'device_code'}
-    poll(tokenEndpoint,tokenHeaders,tokenData,id,secret)
-def logout():
-    try:
-        f=open(configfile,'r')
-    except:
-        print('No config.  User logged out.')
-    config = ast.literal_eval(f.read())
-    config.pop('token', None)
-    conf = json.dumps(config)
-    f=open(configfile,'w+')
-    f.write(conf)
-    print('User logged off.')
 def docs():
     print("s = npr.Station('wamu') | s = npr.Station('22205')")
     print("s = npr.Station(305) | s = npr.Station(38.9072,-77.0369)")
@@ -256,6 +318,7 @@ def docs():
     print("explore = npr.Channels()")
     print("  explore.fetch(2) - fetch segments from third row of explore list")
     print("  explore.row.pretty()")
+    print("npr.clientauth()")
     print("npr.auth()")
     print("npr.deauth()")
     print("npr.login()")

@@ -1,6 +1,6 @@
 Metadata-Version: 1.1
 Name: npr
-Version: 1.1.12
+Version: 1.2.0
 Summary: NPR cloud framework
 Home-page: http://github.com/perrydc/npr
 Author: Demian Perry
@@ -9,7 +9,7 @@ License: MIT
 Description: Self-authenticating module for accessing NPR APIs in Python.
 Keywords: public radio stream metadata api service
 Platform: UNKNOWN
-Classifier: Development Status :: 3 - Alpha
+Classifier: Development Status :: 5 - Production/Stable
 Classifier: Intended Audience :: Developers
 Classifier: License :: OSI Approved :: MIT License
 Classifier: Programming Language :: Python :: 2
