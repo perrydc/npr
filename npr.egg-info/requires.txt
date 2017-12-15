@@ -1,3 +1,0 @@
-requests
-future
-requests[security];python_version<"2.9"
