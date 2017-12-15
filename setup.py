@@ -5,7 +5,7 @@ from os import path
 here = path.abspath(path.dirname(__file__))
 
 setup(name='npr',
-      version='1.2.1',
+      version='1.2.2',
       description='NPR cloud framework',
       long_description='Self-authenticating module for accessing NPR APIs in Python.',
       classifiers=[
@@ -25,6 +25,8 @@ setup(name='npr',
       author='Demian Perry',
       author_email='dperry@npr.org',
       license='MIT',
+      install_requires=[
+          'requests','future','requests[security];python_version<"2.9"',
+      ],
       packages=find_packages(exclude=['tests*']),
-      keywords='public, radio, stream, metadata, api, service, npr',
-      python_requires='>=3')
+      keywords='public, radio, stream, metadata, api, service, npr')

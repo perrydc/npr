@@ -209,11 +209,24 @@ Packaging for PyPI:
   ],
  
 - push new code to github
-- from repo root (npr) update twine and ship it
+- from repo root (npr) build the package:
+
+.. code-block:: bash
+
+  python setup.py sdist bdist_wheel
+
+- update twine (optional) and upload it to PyPI:
 
 .. code-block:: bash
 
   pip install --upgrade twine
-  python setup.py sdist bdist_wheel
+  twine upload dist/* --skip-existing
 
-- (pat yourself on the back)
+- uninstall and reinstall npr on your machine.
+
+.. code-block:: bash
+
+  pip uninstall npr
+  pip install npr
+
+(pat yourself on the back)
