@@ -192,14 +192,14 @@ Full endpoint documentation is available at http://dev.npr.org
 Packaging for PyPI:
 -------------------
 
- * from npr/npr, type the command:
+- from npr/npr, type the command:
 
 .. code-block:: bash
 
   pasteurize -w __init__.py
 
- * open npr/tests/test.ipynb in jupyter and run some of the tests
- * increment the version number in npr/setup.py and add any new dependencies
+- open npr/tests/test.ipynb in jupyter and run some of the tests
+- increment the version number in npr/setup.py and add any new dependencies
 
 .. code-block:: bash
 
@@ -208,12 +208,12 @@ Packaging for PyPI:
     'requests','future','requests[security];python_version<"2.9"',
   ],
  
- * push new code to github
- * from repo root (npr) update twine and ship it
+- push new code to github
+- from repo root (npr) update twine and ship it
 
 .. code-block:: bash
 
   pip install --upgrade twine
   python setup.py sdist bdist_wheel
 
- * (pat yourself on the back)
+- (pat yourself on the back)
