@@ -1,8 +1,4 @@
-from setuptools import setup
-from setuptools import find_packages
-from os import path
-
-here = path.abspath(path.dirname(__file__))
+from setuptools import setup, find_packages
 
 setup(name='npr',
       version='1.2.1',
@@ -21,10 +17,13 @@ setup(name='npr',
         'Programming Language :: Python :: 3.6',
         'Topic :: Internet :: WWW/HTTP',
       ],
+      keywords='public radio stream metadata api service',
       url='http://github.com/perrydc/npr',
       author='Demian Perry',
       author_email='dperry@npr.org',
       license='MIT',
-      packages=find_packages(exclude=['tests*']),
-      keywords='public, radio, stream, metadata, api, service, npr',
-      python_requires='>=3')
+      py_modules=['npr'],
+      install_requires=[
+          'requests','future','requests[security];python_version<"2.9"',
+      ],
+)
