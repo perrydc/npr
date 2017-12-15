@@ -12,12 +12,14 @@ Setup:
 Begin by authenticating your app.  Auth will walk you through key creation.
 
 .. code-block:: python
+
   import npr
   npr.auth()
 
 output:
 
 .. code-block:: bash
+
   To authenticate your app:
     1. LOGIN to http://dev.npr.org (if it's your first time, you'll need to register.)
     2. Open the dev console (drop down in the top right corner of dev center)
