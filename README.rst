@@ -60,7 +60,7 @@ Example data fetch:
 Custom variables:
 -----------------
 
-You can also use a reverse lookup to find the keys to your own variables::
+You can also use a reverse lookup to find the keys to your own variables:
 
 .. code-block:: python
 
@@ -81,6 +81,8 @@ You can also use a reverse lookup to find the keys to your own variables::
           "content-type": "audio/mp3",
           "href": "https://play.podtrac.com/npr-510308...
 	. . . 
+
+And, using the above output, query to find the key to **Ep. 64: I'm Right, You're Wrong**
 
 .. code-block:: python
 
