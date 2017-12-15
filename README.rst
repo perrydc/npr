@@ -4,7 +4,10 @@ NPR
 This module provides a simple framework for working with NPR's cloud services.
 
 You can install this module via:
-	pip install npr
+
+.. code-block:: python
+
+  pip install npr
 
 Setup:
 ------
@@ -185,3 +188,10 @@ Endpoint helper functions:
 	| <YOUR OBJECT NAME> **.find('your json value')** - returns the json key path for the value you entered
 	
 Full endpoint documentation is available at http://dev.npr.org
+
+Packaging for PyPI:
+-------------------
+
+1. push new code to github
+2. run tests/test.ipynb
+3. 

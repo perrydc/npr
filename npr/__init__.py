@@ -11,8 +11,24 @@ from future import standard_library
 standard_library.install_aliases()
 import requests,json,re,os,ast,sys,time,datetime
 
+debug = 1
 configfile = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'npr.conf')
 #configfile = 'npr.conf' #dev mode (comment out above) 1.2.0
+
+def fetchConfig():
+    if os.path.isfile(configfile):
+        f=open(configfile,'r')
+        config = ast.literal_eval(f.read())
+        if 'id' in config and 'secret' in config:
+            if 'token' not in config:
+                print('No token.  npr.login() will fetch it for you.')
+        else:
+            print('app ID and/or app secret is missing.  Try npr.clientauth() or npr.auth()')
+        return config
+    else:
+        print('config file is missing.  Try npr.clientauth() or npr.auth()')
+        config = {}
+        return config
 
 def promptauth():
     print("To authenticate your app:")
@@ -50,6 +66,7 @@ def deauth():
 def poll(tokenEndpoint,tokenHeaders,tokenData):
     tokenJson = requests.post(tokenEndpoint, headers=tokenHeaders, data = tokenData).json()
     if 'access_token' in tokenJson:
+        config = fetchConfig()
         config['token'] = tokenJson['access_token']
         config['expires_in'] = tokenJson['expires_in']
         config['refresh_token'] = tokenJson['refresh_token']
@@ -91,17 +108,6 @@ def logout():
     else:
         print('No config.  User logged out.')
 
-if os.path.isfile(configfile):
-    f=open(configfile,'r')
-    config = ast.literal_eval(f.read())
-    if 'id' in config and 'secret' in config:
-        if 'token' not in config:
-            print('No token.  Try npr.login()')
-    else:
-        print('app ID and/or app secret is missing.  Try npr.clientauth() or npr.auth() to access user data')
-else:
-    print('app ID and/or app secret is missing.  Try npr.clientauth() or npr.auth() to access user data')
-
 def testr(endpoint,headers):
     response = requests.get(endpoint,headers=headers).json()
     if errors(response) == -1:
@@ -110,7 +116,9 @@ def testr(endpoint,headers):
         response = requests.get(endpoint,headers=headers).json()
         return response
     elif errors(response) > 0:
-        print(json.dumps(response, sort_keys=True, indent=2, separators=(',', ': ')))
+        if debug == 1:
+            print('To turn off response errors, set npr.debug = 0')
+            print(json.dumps(response, sort_keys=True, indent=2, separators=(',', ': ')))
         return response
     else:
         return response
@@ -142,8 +150,9 @@ def refresh():
     
 class Api(object):
     def __init__(self):
-        self.domain = "https://api.npr.org"        
-        self.token = config['token']
+        self.domain = "https://api.npr.org"
+        self.config = fetchConfig()
+        self.token = self.config['token']
         self.headers = {"Accept":"application/json","Authorization":"Bearer " + self.token}
             
     def pretty(self):
@@ -200,18 +209,24 @@ class Channels(Api):
         self.response = testr(self.endpoint,self.headers)
     def fetch(self,n):
         self.endpoint = self.response['items'][n]['href']
-        self.row = Recommend(self.endpoint,self.headers)
+        self.headers = {"Accept":"application/json","Authorization":"Bearer " + self.token}
+        self.row = Recommend(self.endpoint, self.headers)
+
+#    def fetch(self,n):
+#        self.endpoint = self.response['items'][n]['href']
+#        self.row = Recommend(self.endpoint, self.headers)
         
 class Recommend(Api):
-    def __init__(self,endpoint,headers):
+    def __init__(self, endpoint, headers):
         self.endpoint = endpoint
-        self.response = testr(self.endpoint,self.headers)
+        self.response = testr(self.endpoint, headers)
+#        self.response = testr(self.endpoint, self.headers)
 
 class Agg(Api):
     def __init__(self, aggId):
         Api.__init__(self)
         self.endpoint = self.domain + "/listening/v2/aggregation/" + aggId + "/recommendations"
-        self.response = testr(self.endpoint,self.headers)        
+        self.response = testr(self.endpoint, self.headers)        
         
 class Station(Api):
     def __init__(self, query, lon=0):
