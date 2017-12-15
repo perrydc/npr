@@ -7,7 +7,7 @@ here = path.abspath(path.dirname(__file__))
 setup(name='npr',
       version='1.2.2',
       description='NPR cloud framework',
-      long_description='Self-authenticating module for accessing NPR APIs in Python.',
+      long_description=read('README.rst'),
       classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
