@@ -192,6 +192,28 @@ Full endpoint documentation is available at http://dev.npr.org
 Packaging for PyPI:
 -------------------
 
-1. push new code to github
-2. run tests/test.ipynb
-3. 
+ * from npr/npr, type the command:
+
+.. code-block:: bash
+
+  pasteurize -w __init__.py
+
+ * open npr/tests/test.ipynb in jupyter and run some of the tests
+ * increment the version number in npr/setup.py and add any new dependencies
+
+.. code-block:: bash
+
+  version='0.1.2',
+  install_requires=[
+    'requests','future','requests[security];python_version<"2.9"',
+  ],
+ 
+ * push new code to github
+ * from repo root (npr) update twine and ship it
+
+.. code-block:: bash
+
+  pip install --upgrade twine
+  python setup.py sdist bdist_wheel
+
+ * (pat yourself on the back)
