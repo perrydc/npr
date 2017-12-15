@@ -16,7 +16,7 @@ Begin by authenticating your app.  Auth will walk you through key creation.
   import npr
   npr.auth()
 
-output:
+**output**:
 
 .. code-block:: bash
 
@@ -30,11 +30,13 @@ output:
 Fill in your application ID and secret at the prompts.  Once verified, you must login:
 
 .. code-block:: python
+
   npr.login()
 
-output:
+**output**:
 
 .. code-block:: bash 
+
   Go to https://secure.npr.org/device login and enter:
   Z3SDM6
 
@@ -45,13 +47,15 @@ Example data fetch:
 -------------------
 
 .. code-block:: python
+
   station = npr.Station('chicago')
   station.live()
 
-output:
+**output**:
 
 .. code-block:: bash 
-'https://stream.wbez.org/wbez128.mp3'
+
+  'https://stream.wbez.org/wbez128.mp3'
 
 Custom variables:
 -----------------
@@ -59,12 +63,14 @@ Custom variables:
 You can also use a reverse lookup to find the keys to your own variables::
 
 .. code-block:: python
+
   search = npr.Search('Hidden Brain')
   search.pretty()
 	
-output:
+**output**:
 
 .. code-block:: bash 
+
   "audioTitle": "Ep. 64: I'm Right, You're Wrong",
   "date": "2017-03-13T21:00:19-04:00",
   "description": "There are some topics
@@ -77,20 +83,24 @@ output:
 	. . . 
 
 .. code-block:: python
+
   search.find("Ep. 64: I'm Right, You're Wrong")
 
-output:
+**output**:
 
 .. code-block:: bash
+
   Ep. 64: I'm Right, You're Wrong .response['items'][0]['items'][2]['attributes']['audioTitle']
 
 .. code-block:: python
+
   for episode in search.response['items'][0]['items']:
     print(episode['attributes']['audioTitle'])
 
-output:
+**output**:
 
 .. code-block:: bash
+
   Ep. 66: Liar, Liar
   Episode 65: Tunnel Vision
   Ep. 64: I'm Right, You're Wrong
@@ -98,6 +108,7 @@ output:
 To grab more than the last three episodes from this aggregation, you'll need to lookup the affiliate code and pass it to the Agg class:
 
 .. code-block:: python
+
   hiddenBrain = Agg('510308')
   hiddenBrain.pretty()
 
@@ -107,22 +118,26 @@ Build an NPR One app:
 This won't help you play audio through a speaker, but it'll get you the data you need.  First, initialize your player:
 
 .. code-block:: python
+
   player = npr.One()
 	
 Now pass the title of the story to your display and the story audio to your player, use:
 
 .. code-block:: python
+
   player.title
   player.audio
 
 To get the next segment, use:
 
 .. code-block:: python
+
   player.skip()
 	
 or
 
 .. code-block:: python
+
   player.complete()
 	
 ...depending on the user action.  Then you call player.audio to play the next segment.
@@ -133,6 +148,7 @@ Explore Tab:
 The channel endpoint just lets you know what collections are available.  You'll need a distinct call for each row (collection) in the explore tab.  So to initialize the explore object and see all the stories in the third row, use:
 
 .. code-block:: python
+
   explore = npr.Channels()
   explore.fetch(2)
   explore.row.pretty()
