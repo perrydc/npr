@@ -1,8 +1,9 @@
 from setuptools import setup
 from setuptools import find_packages
-from os import path
+import os
 
-here = path.abspath(path.dirname(__file__))
+def read(fname):
+    return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(name='npr',
       version='1.2.2',
