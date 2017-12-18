@@ -178,6 +178,7 @@ Endpoint classes:
 	| **npr.One()** - Like recommend, except you can advance to the next segment via skip() and complete()
 	| **npr.Agg()** - returns audio segments from the selected aggregation (aka affiliation)
 	| **npr.Channels()** - returns channels from the explore tab, which, along with fetch(row) will also return segments.
+	| **npr.Read(storyId)** - returns story assets from the reading service.
 	
 Endpoint helper functions:
 --------------------------
