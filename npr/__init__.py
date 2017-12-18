@@ -190,6 +190,13 @@ class Api(object):
         else:
             print(term, keys[term])
 
+class Read(Api):
+    def __init__(self):
+        Api.__init__(self)
+        self.endpoint = "https://reading.api.npr.org/v1/news-app/home"
+        #self.endpoint = "https://stage1.reading.api.npr.org/v1/news-app/home"
+        self.response = testr(self.endpoint, self.headers)
+
 class User(Api):
     def __init__(self):
         Api.__init__(self)
