@@ -6,7 +6,7 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(name='npr',
-      version='1.2.2',
+      version='2.0.0',
       description='NPR cloud framework',
       long_description=read('README.rst'),
       classifiers=[

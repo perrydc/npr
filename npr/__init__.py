@@ -127,10 +127,11 @@ def errors(response):
     c = 0
     if 'errors' in response:
         for error in response['errors']:
-            if bool(re.match(r'^401',str(error['code']))):
-                return -1
-            else:
-                c += 1
+            if 'code' in error:
+                if bool(re.match(r'^401',str(error['code']))):
+                    return -1
+                else:
+                    c += 1
     return c
         
 def refresh():
@@ -157,6 +158,15 @@ class Api(object):
             
     def pretty(self):
         print(json.dumps(self.response, sort_keys=True, indent=2, separators=(',', ': ')))
+
+    def getassets(self):
+        self.assets = self.__dict__
+        self.assets.pop('config', None)
+        self.assets.pop('domain', None)
+        self.assets.pop('headers', None)
+        self.assets.pop('token', None)
+        self.assets.pop('endpoint', None)
+
     def view(self,tree, path='.response'):
         if isinstance(tree, str)|isinstance(tree, int)|isinstance(tree, float):
             leaf = tree
@@ -190,24 +200,46 @@ class Api(object):
         else:
             print(term, keys[term])
 
-class Read(Api):
-    def __init__(self):
+class Browse(Api):
+    def __init__(self, id=0):
         Api.__init__(self)
-        self.endpoint = "https://reading.api.npr.org/v1/news-app/home"
-        #self.endpoint = "https://stage1.reading.api.npr.org/v1/news-app/home"
+        if id == 0:
+            self.endpoint = "https://reading.api.npr.org/v1/news-app/home"
+        else:
+            self.endpoint = "https://reading.api.npr.org/v1/news-app/aggregations/external/" + str(id)
+            # /v1/news-app/aggregations/{guid}
+            # /v1/news-app/aggregations/creator/{guid}/external/{ext-id}
         self.response = testr(self.endpoint, self.headers)
+        self.getassets()
+
+class Read(Api):
+    def __init__(self, id=0):
+        Api.__init__(self)
+        if id == 0:
+            self.endpoint = "https://reading.api.npr.org/v1/news-app/home"
+        else:
+            self.endpoint = "https://reading.api.npr.org/v1/news-app/stories/external/" + str(id)
+        self.response = testr(self.endpoint, self.headers)
+
+        for story in self.response['resources']:
+            if story['type'] == 'title':
+                self.title = story['value']
+
+        self.getassets()
 
 class User(Api):
     def __init__(self):
         Api.__init__(self)
         self.endpoint = self.domain + "/identity/v2/user"
         self.response = testr(self.endpoint,self.headers)
+        self.getassets()
 
 class Search(Api):
     def __init__(self, query):
         Api.__init__(self)
         self.endpoint = self.domain + "/listening/v2/search/recommendations?searchTerms=" + query
         self.response = testr(self.endpoint,self.headers)
+        self.getassets()
 
 class Channels(Api):
     def __init__(self, exploreOnly='false'):
@@ -218,6 +250,7 @@ class Channels(Api):
         self.endpoint = self.response['items'][n]['href']
         self.headers = {"Accept":"application/json","Authorization":"Bearer " + self.token}
         self.row = Recommend(self.endpoint, self.headers)
+        self.getassets()
 
 #    def fetch(self,n):
 #        self.endpoint = self.response['items'][n]['href']
@@ -228,12 +261,14 @@ class Recommend(Api):
         self.endpoint = endpoint
         self.response = testr(self.endpoint, headers)
 #        self.response = testr(self.endpoint, self.headers)
+        self.getassets()
 
 class Agg(Api):
     def __init__(self, aggId):
         Api.__init__(self)
         self.endpoint = self.domain + "/listening/v2/aggregation/" + aggId + "/recommendations"
-        self.response = testr(self.endpoint, self.headers)        
+        self.response = testr(self.endpoint, self.headers)
+        self.getassets()
         
 class Station(Api):
     def __init__(self, query, lon=0):
@@ -245,25 +280,32 @@ class Station(Api):
         else:
             self.endpoint = self.domain + "/stationfinder/v3/stations?q=" + query
         self.response = testr(self.endpoint,self.headers)
+        
+        self.live = self.live()
+        self.getassets()
+        
     def getstream(self):
-        for stream in self.response['items'][0]['links']['streams']:
+        for stream in self.response['links']['streams']:
          if stream['isPrimaryStream'] and stream['typeId'] == "10":
            return stream['href']
-        for stream in self.response['items'][0]['links']['streams']:
+        for stream in self.response['links']['streams']:
          if stream['isPrimaryStream']:
            return stream['href']
-        for stream in self.response['items'][0]['links']['streams']:
+        for stream in self.response['links']['streams']:
          if stream['typeId'] == "10":
           return stream['href']
         return stream['href']
+    
     def pls(self,stream):
         f = requests.get(stream).text
         url = re.search(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+',f)
         return url.group(0)
+    
     def m3u(self,stream):
         f = requests.get(stream).text
         url = re.search(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+',f)
         return url.group(0)
+    
     def live(self):
         s = self.getstream()
         if re.search(r'pls$',s):
@@ -278,9 +320,9 @@ class One(Api):
     def __init__(self):
         Api.__init__(self)
         self.endpoint = self.domain + "/listening/v2/recommendations"
-        self.response = testr(self.endpoint,self.headers)
+        self.h = self.headers
+        self.response = testr(self.endpoint, self.headers)
         self.setVars()
-        #print(self.pretty())
     def getaudio(self):
         aac = ""
         mp3 = ""
@@ -305,6 +347,7 @@ class One(Api):
             'channel':self.response['items'][0]['attributes']['rating']['channel'],
             'cohort':self.response['items'][0]['attributes']['rating']['cohort']
         }
+        self.getassets()
     def postTime(self):
         timestamp = datetime.datetime.utcnow()
         elapsed = int((timestamp - self.start).total_seconds())
@@ -314,7 +357,7 @@ class One(Api):
         self.postTime()
         self.endpoint = self.response['items'][0]['links']['recommendations'][0]['href']
         self.data = json.dumps([self.post])
-        self.response = requests.post(self.endpoint, headers=self.headers, data=self.data).json()
+        self.response = requests.post(self.endpoint, headers=self.h, data=self.data).json()
         self.setVars()        
     def skip(self):
         self.post.update({'rating':'SKIP'})
@@ -324,24 +367,34 @@ class One(Api):
         self.advancePlayer()
 
 def docs():
-    print("s = npr.Station('wamu') | s = npr.Station('22205')")
-    print("s = npr.Station(305) | s = npr.Station(38.9072,-77.0369)")
-    print("  s.pretty() <-this is a generic DISPLAY function that works on all classes")
-    print("  s.find('88.5') <-this is a generic REVERSE LOOKUP function that works on all classes")
-    print("  print(s.live())")
-    print("player = npr.One()")
-    print("  player.audio")
-    print("  player.title")
-    print("  player.skip() | player.complete()")
-    print("user = npr.User()")
-    print("query = npr.Search('hidden')")
-    print("hiddenBrain = Agg('510308') - the aggId is listed as the 'affiliation' in search")
-    print("  hiddenBrain.pretty()")
-    print("explore = npr.Channels()")
-    print("  explore.fetch(2) - fetch segments from third row of explore list")
-    print("  explore.row.pretty()")
-    print("npr.clientauth()")
-    print("npr.auth()")
-    print("npr.deauth()")
-    print("npr.login()")
-    print("npr.logout()")
+    docs = """
+STATION API:
+    s = npr.Station('wamu') | s = npr.Station('22205')
+    s = npr.Station(305) | s = npr.Station(38.9072,-77.0369)
+        s.assets <-this is a generic DISPLAY attribute that works on all classes
+        s.find('88.5') <-this is a generic REVERSE LOOKUP function that works on all classes
+
+READING SERVICE:
+    story = npr.Read(565664321)
+    
+LISTENING SERVICE:
+    player = npr.One()
+        print("  player.skip() | player.complete()
+    query = npr.Search('hidden')
+    hiddenBrain = npr.Agg('510308') - the aggId is listed as the 'affiliation' in search
+        hiddenBrain.pretty()
+    explore = npr.Channels()
+        explore.fetch(2) - fetch segments from third row of explore list
+        explore.row.pretty()
+
+IDENTITY SERVICE:
+    user = npr.User()
+
+AUTH:
+    npr.clientauth()
+    npr.auth()
+    npr.deauth()
+    npr.login()
+    npr.logout()
+    """
+    print(docs)
