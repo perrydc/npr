@@ -221,9 +221,10 @@ class Read(Api):
             self.endpoint = "https://reading.api.npr.org/v1/news-app/stories/external/" + str(id)
         self.response = testr(self.endpoint, self.headers)
 
-        for story in self.response['resources']:
-            if story['type'] == 'title':
-                self.title = story['value']
+        if 'resources' in self.response:
+            for story in self.response['resources']:
+                if story['type'] == 'title':
+                    self.title = story['value']
 
         self.getassets()
 
@@ -275,23 +276,28 @@ class Station(Api):
         Api.__init__(self)
         if lon != 0:
             self.endpoint = self.domain + "/stationfinder/v3/stations/?lat=" + str(query) + "&lon=" + str(lon)
+            self.response = testr(self.endpoint,self.headers)
+            self.streams = self.response['items'][0]['links']['streams']
         elif type(query) == int:
             self.endpoint = self.domain + "/stationfinder/v3/stations/" + str(query)
+            self.response = testr(self.endpoint,self.headers)
+            self.streams = self.response['links']['streams']
         else:
             self.endpoint = self.domain + "/stationfinder/v3/stations?q=" + query
-        self.response = testr(self.endpoint,self.headers)
+            self.response = testr(self.endpoint,self.headers)
+            self.streams = self.response['items'][0]['links']['streams']
         
         self.live = self.live()
         self.getassets()
         
     def getstream(self):
-        for stream in self.response['links']['streams']:
+        for stream in self.streams:
          if stream['isPrimaryStream'] and stream['typeId'] == "10":
            return stream['href']
-        for stream in self.response['links']['streams']:
+        for stream in self.streams:
          if stream['isPrimaryStream']:
            return stream['href']
-        for stream in self.response['links']['streams']:
+        for stream in self.streams:
          if stream['typeId'] == "10":
           return stream['href']
         return stream['href']
