@@ -155,7 +155,7 @@ class Api(object):
         self.config = fetchConfig()
         self.token = self.config['token']
         self.headers = {"Accept":"application/json","Authorization":"Bearer " + self.token}
-        self.assets = ()
+        self.a = {}
         
     def pretty(self):
         print(json.dumps(self.response, sort_keys=True, indent=2, separators=(',', ': ')))
@@ -194,16 +194,33 @@ class Api(object):
             print(term, keys[term])
 
 class Story(Api):
-    def __init__(self):
+    def __init__(self, id):
         Api.__init__(self)
         self.endpoint = "https://reading.api.npr.org/v1/news-app/stories/external/" + str(id)
         self.response = testr(self.endpoint, self.headers)
-        self.defineAssets(self.response)
+        self.a = self.defineAssets(self.response)
+        self.__dict__.update(self.a)
 
-    def defineAssets(jsonBlock):
-        for story in jsonBlock['resources']:
-            if story['type'] == 'title':
-                self.title = story['value']
+    def defineAssets(self, jsonBlock):
+        a = {}
+        for resource in jsonBlock['resources']:
+            if 'type' in resource and 'value' in resource:
+                a.update({resource['type']:resource['value']})
+            if resource['type'] == 'slug':
+                a.update({'slug':resource['title']})
+                a.update({'slugId':resource['externalId']})
+            if resource['type'] == 'byline':
+                authors = []
+                for author in resource['authors']:
+                    authors.append(author['title'])
+                a.update({'byline':', '.join(authors)})
+            if resource['type'] == 'image':
+                a.update({'imageAttribution':resource['attribution']})
+                a.update({'caption':resource['title']})
+                for crop in resource['crops']:
+                    if crop['primary'] == 'true':
+                        a.update({'image':crop['href']})
+        return a
 
 class Stories(Story):
     def __init__(self, id=0):
@@ -215,6 +232,16 @@ class Stories(Story):
             # /v1/news-app/aggregations/{guid}
             # /v1/news-app/aggregations/creator/{guid}/external/{ext-id}
         self.response = testr(self.endpoint, self.headers)
+        self.a = self.defineAssets(self.response)
+        self.__dict__.update(self.a)
+        
+    def defineAssets(self, jsonBlock):
+        a = {}
+        titles = []
+        for story in self.response['listItems']:
+            titles.append(story['title'])
+        a.update({'titles':titles})
+        return a
 
 class User(Api):
     def __init__(self):
