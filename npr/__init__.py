@@ -241,6 +241,10 @@ class Stories(Story):
         for story in self.response['listItems']:
             titles.append(story['title'])
         a.update({'titles':titles})
+        ids = []
+        for story in self.response['listItems']:
+            ids.append(story['externalId'])
+        a.update({'titles':ids})
         return a
 
 class User(Api):
