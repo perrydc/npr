@@ -155,17 +155,10 @@ class Api(object):
         self.config = fetchConfig()
         self.token = self.config['token']
         self.headers = {"Accept":"application/json","Authorization":"Bearer " + self.token}
-            
+        self.assets = ()
+        
     def pretty(self):
         print(json.dumps(self.response, sort_keys=True, indent=2, separators=(',', ': ')))
-
-    def getassets(self):
-        self.assets = self.__dict__
-        self.assets.pop('config', None)
-        self.assets.pop('domain', None)
-        self.assets.pop('headers', None)
-        self.assets.pop('token', None)
-        self.assets.pop('endpoint', None)
 
     def view(self,tree, path='.response'):
         if isinstance(tree, str)|isinstance(tree, int)|isinstance(tree, float):
@@ -200,7 +193,19 @@ class Api(object):
         else:
             print(term, keys[term])
 
-class Browse(Api):
+class Story(Api):
+    def __init__(self):
+        Api.__init__(self)
+        self.endpoint = "https://reading.api.npr.org/v1/news-app/stories/external/" + str(id)
+        self.response = testr(self.endpoint, self.headers)
+        self.defineAssets(self.response)
+
+    def defineAssets(jsonBlock):
+        for story in jsonBlock['resources']:
+            if story['type'] == 'title':
+                self.title = story['value']
+
+class Stories(Story):
     def __init__(self, id=0):
         Api.__init__(self)
         if id == 0:
@@ -210,37 +215,18 @@ class Browse(Api):
             # /v1/news-app/aggregations/{guid}
             # /v1/news-app/aggregations/creator/{guid}/external/{ext-id}
         self.response = testr(self.endpoint, self.headers)
-        self.getassets()
-
-class Read(Api):
-    def __init__(self, id=0):
-        Api.__init__(self)
-        if id == 0:
-            self.endpoint = "https://reading.api.npr.org/v1/news-app/home"
-        else:
-            self.endpoint = "https://reading.api.npr.org/v1/news-app/stories/external/" + str(id)
-        self.response = testr(self.endpoint, self.headers)
-
-        if 'resources' in self.response:
-            for story in self.response['resources']:
-                if story['type'] == 'title':
-                    self.title = story['value']
-
-        self.getassets()
 
 class User(Api):
     def __init__(self):
         Api.__init__(self)
         self.endpoint = self.domain + "/identity/v2/user"
         self.response = testr(self.endpoint,self.headers)
-        self.getassets()
 
 class Search(Api):
     def __init__(self, query):
         Api.__init__(self)
         self.endpoint = self.domain + "/listening/v2/search/recommendations?searchTerms=" + query
         self.response = testr(self.endpoint,self.headers)
-        self.getassets()
 
 class Channels(Api):
     def __init__(self, exploreOnly='false'):
@@ -251,7 +237,6 @@ class Channels(Api):
         self.endpoint = self.response['items'][n]['href']
         self.headers = {"Accept":"application/json","Authorization":"Bearer " + self.token}
         self.row = Recommend(self.endpoint, self.headers)
-        self.getassets()
 
 #    def fetch(self,n):
 #        self.endpoint = self.response['items'][n]['href']
@@ -262,14 +247,12 @@ class Recommend(Api):
         self.endpoint = endpoint
         self.response = testr(self.endpoint, headers)
 #        self.response = testr(self.endpoint, self.headers)
-        self.getassets()
 
 class Agg(Api):
     def __init__(self, aggId):
         Api.__init__(self)
         self.endpoint = self.domain + "/listening/v2/aggregation/" + aggId + "/recommendations"
         self.response = testr(self.endpoint, self.headers)
-        self.getassets()
         
 class Station(Api):
     def __init__(self, query, lon=0):
@@ -288,7 +271,6 @@ class Station(Api):
             self.streams = self.response['items'][0]['links']['streams']
         
         self.live = self.live()
-        self.getassets()
         
     def getstream(self):
         for stream in self.streams:
@@ -353,7 +335,7 @@ class One(Api):
             'channel':self.response['items'][0]['attributes']['rating']['channel'],
             'cohort':self.response['items'][0]['attributes']['rating']['cohort']
         }
-        self.getassets()
+
     def postTime(self):
         timestamp = datetime.datetime.utcnow()
         elapsed = int((timestamp - self.start).total_seconds())
@@ -377,7 +359,8 @@ def docs():
 STATION API:
     s = npr.Station('wamu') | s = npr.Station('22205')
     s = npr.Station(305) | s = npr.Station(38.9072,-77.0369)
-        s.assets <-this is a generic DISPLAY attribute that works on all classes
+        s.assets # a shortcut for getting the most common data from each class
+        s.pretty() # prints the response in a readable format
         s.find('88.5') <-this is a generic REVERSE LOOKUP function that works on all classes
 
 READING SERVICE:
