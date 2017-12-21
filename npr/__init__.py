@@ -293,44 +293,38 @@ class Station(Api):
         #self.streams = self.response['links']['streams']
         self.a = self.defineAssets(self.response)
         self.__dict__.update(self.a)
-        
-    def getstream(self):
-        for stream in self.streams:
-         if stream['isPrimaryStream'] and stream['typeId'] == "10":
-           return stream['href']
-        for stream in self.streams:
-         if stream['isPrimaryStream']:
-           return stream['href']
-        for stream in self.streams:
-         if stream['typeId'] == "10":
-          return stream['href']
-        return stream['href']
     
-    def pls(self,stream):
-        f = requests.get(stream).text
-        url = re.search(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+',f)
-        return url.group(0)
-    
-    def m3u(self,stream):
-        f = requests.get(stream).text
-        url = re.search(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+',f)
-        return url.group(0)
-    
-    def live(self):
-        s = self.getstream()
-        if re.search(r'pls$',s):
-          stream = self.pls(s)
-        elif re.search(r'm3u$',s):
-          stream = self.m3u(s)
+    def popWrapper(self, stream):
+        if re.search(r'pls$',stream):
+            f = requests.get(stream).text
+            url = re.search(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+',f)
+            return url.group(0)
+        elif re.search(r'm3u$',stream):
+            f = requests.get(stream).text
+            url = re.search(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+',f)
+            return url.group(0)
         else:
-          stream = s
-        return stream
+            return stream
     
     def defineAssets(self, jsonBlock):
         a = {}
         name = jsonBlock['attributes']['brand']['name']
         id = jsonBlock['attributes']['orgId']
         a.update({'id':id, 'name':name})
+        if 'streams' in jsonBlock['links']:
+            for stream in jsonBlock['links']['streams']:
+                if stream['isPrimaryStream'] and stream['typeId'] == "13":
+                    aac = self.popWrapper(stream['href'])
+                elif stream['isPrimaryStream'] and stream['typeId'] == "10":
+                    mp3 = self.popWrapper(stream['href'])
+                    a.update({'mp3': mp3})
+            try:
+                a.update({'stream': aac})
+            except:
+                try:
+                    a.update({'stream': mp3})
+                except:
+                    pass
         return a
 
 class Stations(Station):
@@ -344,7 +338,8 @@ class Stations(Station):
         self.a.update({'station':[]})
         for station in self.response['items']:
             self.a['station'].append(self.defineAssets(station))
-        self.a.update(self.defineAssets(self.response['items'][0]))
+        #self.a.update(self.defineAssets(self.response['items'][0]))
+        self.a.update(self.a['station'][0])
         self.__dict__.update(self.a)
 
 class One(Api):
