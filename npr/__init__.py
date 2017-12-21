@@ -244,7 +244,7 @@ class Stories(Story):
         ids = []
         for story in self.response['listItems']:
             ids.append(story['externalId'])
-        a.update({'titles':ids})
+        a.update({'titles':titles, 'ids':ids})
         return a
 
 class User(Api):
@@ -252,6 +252,18 @@ class User(Api):
         Api.__init__(self)
         self.endpoint = self.domain + "/identity/v2/user"
         self.response = testr(self.endpoint,self.headers)
+        self.a = self.defineAssets(self.response)
+        self.__dict__.update(self.a)
+        
+    def defineAssets(self, jsonBlock):
+        a = {}
+        id = jsonBlock['attributes']['id']
+        email = jsonBlock['attributes']['email']
+        name = jsonBlock['attributes']['firstName'] + " " + jsonBlock['attributes']['lastName']
+        station = jsonBlock['attributes']['organizations'][0]['displayName']
+        cohort = jsonBlock['attributes']['cohort']['id']
+        a.update({'id':id, 'name':name, 'station':station, 'email':email, 'cohort':cohort})
+        return a
 
 class Search(Api):
     def __init__(self, query):
@@ -348,7 +360,29 @@ class One(Api):
         self.endpoint = self.domain + "/listening/v2/recommendations"
         self.h = self.headers
         self.response = testr(self.endpoint, self.headers)
-        self.setVars()
+        self.defineAssets()
+        
+    def defineAssets(self):
+        a = {}
+        self.mp3,self.aac = self.getaudio()
+        if self.aac != "":
+            audio = self.aac
+        else:
+            audio = self.mp3
+        title = self.response['items'][0]['attributes']['title']
+        self.start = datetime.datetime.utcnow()
+        self.post = {
+            'mediaId':self.response['items'][0]['attributes']['rating']['mediaId'],
+            'origin':self.response['items'][0]['attributes']['rating']['origin'],
+            'duration':self.response['items'][0]['attributes']['duration'],
+            'channel':self.response['items'][0]['attributes']['rating']['channel'],
+            'cohort':self.response['items'][0]['attributes']['rating']['cohort']
+        }
+        #id = jsonBlock['attributes']['id']
+        a.update({'title':title, 'audio':audio})
+        self.__dict__.update(a)
+        self.a = a
+        
     def getaudio(self):
         aac = ""
         mp3 = ""
@@ -358,21 +392,6 @@ class One(Api):
          if audio['content-type'] == "audio/mp3" and 'rel' not in audio:
           mp3 = audio['href']
         return mp3,aac
-    def setVars(self):
-        self.mp3,self.aac = self.getaudio()
-        if self.aac != "":
-            self.audio = self.aac
-        else:
-            self.audio = self.mp3
-        self.title = self.response['items'][0]['attributes']['title']
-        self.start = datetime.datetime.utcnow()
-        self.post = {
-            'mediaId':self.response['items'][0]['attributes']['rating']['mediaId'],
-            'origin':self.response['items'][0]['attributes']['rating']['origin'],
-            'duration':self.response['items'][0]['attributes']['duration'],
-            'channel':self.response['items'][0]['attributes']['rating']['channel'],
-            'cohort':self.response['items'][0]['attributes']['rating']['cohort']
-        }
 
     def postTime(self):
         timestamp = datetime.datetime.utcnow()
@@ -384,7 +403,7 @@ class One(Api):
         self.endpoint = self.response['items'][0]['links']['recommendations'][0]['href']
         self.data = json.dumps([self.post])
         self.response = requests.post(self.endpoint, headers=self.h, data=self.data).json()
-        self.setVars()        
+        self.defineAssets()    
     def skip(self):
         self.post.update({'rating':'SKIP'})
         self.advancePlayer()
@@ -393,35 +412,37 @@ class One(Api):
         self.advancePlayer()
 
 def docs():
-    docs = """
-STATION API:
-    s = npr.Station('wamu') | s = npr.Station('22205')
-    s = npr.Station(305) | s = npr.Station(38.9072,-77.0369)
-        s.assets # a shortcut for getting the most common data from each class
-        s.pretty() # prints the response in a readable format
-        s.find('88.5') <-this is a generic REVERSE LOOKUP function that works on all classes
+    docs = """station = npr.Station(305) # lookup station by orgId
+station.a # quick-reference of variables in namespace
+station.pretty() # print raw api response
+s.find('88.5') # reverse lookup response keys by value
 
-READING SERVICE:
-    story = npr.Read(565664321)
-    
-LISTENING SERVICE:
-    player = npr.One()
-        print("  player.skip() | player.complete()
-    query = npr.Search('hidden')
-    hiddenBrain = npr.Agg('510308') - the aggId is listed as the 'affiliation' in search
-        hiddenBrain.pretty()
-    explore = npr.Channels()
-        explore.fetch(2) - fetch segments from third row of explore list
-        explore.row.pretty()
+stations = npr.Stations(38.9072,-77.0369) # npr.Stations('22205') | npr.Stations('WAMU')
+stations.station[0]['name'] # example of quick-reference across a list
 
-IDENTITY SERVICE:
-    user = npr.User()
+story = npr.Story(565664321) # lookup story by id
+story.title
 
-AUTH:
-    npr.clientauth()
-    npr.auth()
-    npr.deauth()
-    npr.login()
-    npr.logout()
-    """
+stories = npr.Stories() # lookup top stories
+stories.titles
+
+user = npr.User() # data on the logged in user
+
+player = npr.One() # create a NPR One player object
+player.skip() # player.complete()
+
+query = npr.Search('hidden')
+
+hiddenBrain = npr.Agg('510308') # the aggId is listed as the 'affiliation' in search
+hiddenBrain.pretty()
+
+explore = npr.Channels()
+explore.fetch(2) - fetch segments from third row of explore list
+explore.row.pretty()
+
+npr.clientauth()
+npr.auth()
+npr.deauth()
+npr.login()
+npr.logout()"""
     print(docs)

@@ -51,8 +51,8 @@ Example data fetch:
 
 .. code-block:: python
 
-  station = npr.Station('chicago')
-  station.live()
+  station = npr.Station(309)
+  station.stream
 
 **output**:
 
@@ -169,21 +169,22 @@ Authentication functions:
 Endpoint classes:
 -----------------
 
-	| **npr.Station('query')** - returns metadata about an NPR station, where 'query' can be call letters, zip code, city, or any indexed metadata.
 	| **npr.Station(orgId)** - returns metadata about an NPR station, where 'orgId' is the orgId of the station.
-	| **npr.Station(lat,lon)** - returns metadata about an NPR station, lon should be negative, because all our stations are west of the meridian
+	| **npr.Stations('query')** - returns metadata about NPR stations that match a query (call letters, zip code, city, or any indexed value)
+	| **npr.Stations(lat,lon)** - returns metadata about NPR stations at a location (lon should be negative, because all our stations are west of the meridian)
 	| **npr.Search('query')** - returns programs or episode titles with a term that matches your 'query'
 	| **npr.User()** - returns data (including content preferences) about the logged in user
 	| **npr.Recommend()** - returns a list of recommended audio for the logged in user.
 	| **npr.One()** - Like recommend, except you can advance to the next segment via skip() and complete()
 	| **npr.Agg()** - returns audio segments from the selected aggregation (aka affiliation)
 	| **npr.Channels()** - returns channels from the explore tab, which, along with fetch(row) will also return segments.
-	| **npr.Read(storyId)** - returns story assets from the reading service.
+	| **npr.Story(storyId)** - returns story assets from the reading service.
 	
 Endpoint helper functions:
 --------------------------
 
 	| **npr.docs()** - Lists example endpoint calls
+  | <YOUR OBJECT NAME> **.a** - Lists variables loaded into the namespace of the current object.
 	| <YOUR OBJECT NAME> **.response** - the json response from the endpoint
 	| <YOUR OBJECT NAME> **.pretty()** - prints the json output in human-readable form
 	| <YOUR OBJECT NAME> **.find('your json value')** - returns the json key path for the value you entered
