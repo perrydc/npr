@@ -218,7 +218,7 @@ class Story(Api):
                 a.update({'imageAttribution':resource['attribution']})
                 a.update({'caption':resource['title']})
                 for crop in resource['crops']:
-                    if crop['primary'] == 'true':
+                    if crop['primary'] == True:
                         a.update({'image':crop['href']})
         return a
 
