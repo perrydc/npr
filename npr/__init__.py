@@ -288,20 +288,11 @@ class Agg(Api):
 class Station(Api):
     def __init__(self, query, lon=0):
         Api.__init__(self)
-        if lon != 0:
-            self.endpoint = self.domain + "/stationfinder/v3/stations/?lat=" + str(query) + "&lon=" + str(lon)
-            self.response = testr(self.endpoint,self.headers)
-            self.streams = self.response['items'][0]['links']['streams']
-        elif type(query) == int:
-            self.endpoint = self.domain + "/stationfinder/v3/stations/" + str(query)
-            self.response = testr(self.endpoint,self.headers)
-            self.streams = self.response['links']['streams']
-        else:
-            self.endpoint = self.domain + "/stationfinder/v3/stations?q=" + query
-            self.response = testr(self.endpoint,self.headers)
-            self.streams = self.response['items'][0]['links']['streams']
-        
-        self.live = self.live()
+        self.endpoint = self.domain + "/stationfinder/v3/stations/" + str(query)
+        self.response = testr(self.endpoint,self.headers)
+        #self.streams = self.response['links']['streams']
+        self.a = self.defineAssets(self.response)
+        self.__dict__.update(self.a)
         
     def getstream(self):
         for stream in self.streams:
@@ -334,6 +325,27 @@ class Station(Api):
         else:
           stream = s
         return stream
+    
+    def defineAssets(self, jsonBlock):
+        a = {}
+        name = jsonBlock['attributes']['brand']['name']
+        id = jsonBlock['attributes']['orgId']
+        a.update({'id':id, 'name':name})
+        return a
+
+class Stations(Station):
+    def __init__(self, query, lon=0):
+        Api.__init__(self)
+        if lon != 0:
+            self.endpoint = self.domain + "/stationfinder/v3/stations/?lat=" + str(query) + "&lon=" + str(lon)
+        else:
+            self.endpoint = self.domain + "/stationfinder/v3/stations?q=" + query
+        self.response = testr(self.endpoint,self.headers)
+        self.a.update({'station':[]})
+        for station in self.response['items']:
+            self.a['station'].append(self.defineAssets(station))
+        self.a.update(self.defineAssets(self.response['items'][0]))
+        self.__dict__.update(self.a)
 
 class One(Api):
     def __init__(self):
