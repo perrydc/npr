@@ -306,7 +306,7 @@ class Station(Api):
         self.a = self.defineAssets(self.response)
         self.__dict__.update(self.a)
     
-    def popWrapper(self, stream):
+    def unwrap(self, stream):
         if re.search(r'pls$',stream):
             f = requests.get(stream).text
             url = re.search(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+',f)
@@ -326,9 +326,9 @@ class Station(Api):
         if 'streams' in jsonBlock['links']:
             for stream in jsonBlock['links']['streams']:
                 if stream['isPrimaryStream'] and stream['typeId'] == "13":
-                    aac = self.popWrapper(stream['href'])
+                    aac = stream['href']
                 elif stream['isPrimaryStream'] and stream['typeId'] == "10":
-                    mp3 = self.popWrapper(stream['href'])
+                    mp3 = stream['href']
                     a.update({'mp3': mp3})
             try:
                 a.update({'stream': aac})
@@ -414,6 +414,7 @@ class One(Api):
 def docs():
     docs = """station = npr.Station(305) # lookup station by orgId
 station.a # quick-reference of variables in namespace
+station.unwrap(station.stream) # some streams need to be unwrapped for use by FFMPEG
 station.pretty() # print raw api response
 s.find('88.5') # reverse lookup response keys by value
 
