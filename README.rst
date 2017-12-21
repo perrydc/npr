@@ -184,7 +184,7 @@ Endpoint helper functions:
 --------------------------
 
 	| **npr.docs()** - Lists example endpoint calls
-  | <YOUR OBJECT NAME> **.a** - Lists variables loaded into the namespace of the current object.
+	| <YOUR OBJECT NAME> **.a** - Lists variables loaded into the namespace of the current object.
 	| <YOUR OBJECT NAME> **.response** - the json response from the endpoint
 	| <YOUR OBJECT NAME> **.pretty()** - prints the json output in human-readable form
 	| <YOUR OBJECT NAME> **.find('your json value')** - returns the json key path for the value you entered
