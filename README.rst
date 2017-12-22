@@ -73,7 +73,7 @@ and you can access these in the asset dictionary:
 
 **output**:
 
-.. code-block:: python
+.. code-block:: bash
 
   { 
     'byline': 'Adhiti Bandlamudi',
@@ -137,6 +137,8 @@ And, using the above output, query to find the key to **Ep. 64: I'm Right, You'r
 
   Ep. 64: I'm Right, You're Wrong .response['items'][0]['items'][2]['attributes']['audioTitle']
 
+And now you can loop through all the recent episodes:
+
 .. code-block:: python
 
   for episode in search.response['items'][0]['items']:
@@ -150,7 +152,8 @@ And, using the above output, query to find the key to **Ep. 64: I'm Right, You'r
   Episode 65: Tunnel Vision
   Ep. 64: I'm Right, You're Wrong
 
-To grab more than the last three episodes from this aggregation, you'll need to lookup the affiliate code and pass it to the Agg class:
+To grab **more than the last three episodes** from this aggregation, you'll need to lookup 
+the affiliate code and pass it to the **Agg class**:
 
 .. code-block:: python
 
