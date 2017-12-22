@@ -60,6 +60,44 @@ Example data fetch:
 
   'https://stream.wbez.org/wbez128.mp3'
 
+Common variables:
+-----------------
+
+The most common variables for many classes have already been loaded into the namespace, 
+and you can access these in the asset dictionary:
+
+.. code-block:: python
+
+  story = npr.Story(565664321)
+  story.a
+
+**output**:
+
+.. code-block:: json
+
+{'byline': 'Adhiti Bandlamudi',
+ 'caption': 'Apples used for hard cider.',
+ 'image': 'https://media.npr.org/assets/img/2017/11/22/hard_cider-1.jpg',
+ 'imageAttribution': 'Adhiti Bandlamudi/NPR',
+ 'lastPublishDate': '2017-12-20T09:09:19-05:00',
+ 'organization': 'NPR',
+ 'slug': 'The Salt',
+ 'slugId': '139941248',
+ 'title': 'Craft Hard Cider Is On A Roll. How Ya Like Them Apples?'}
+
+Because they are in the namespace, you can use dot notation to access any of the first-level 
+variables:
+
+.. code-block:: python
+
+  story.title
+
+**output**:
+
+.. code-block:: json
+
+  'Craft Hard Cider Is On A Roll. How Ya Like Them Apples?'
+
 Custom variables:
 -----------------
 
