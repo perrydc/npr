@@ -96,7 +96,7 @@ variables:
 
 **output**:
 
-.. code-block:: json
+.. code-block:: python
 
   'Craft Hard Cider Is On A Roll. How Ya Like Them Apples?'
 
