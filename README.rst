@@ -75,15 +75,17 @@ and you can access these in the asset dictionary:
 
 .. code-block:: json
 
-{'byline': 'Adhiti Bandlamudi',
- 'caption': 'Apples used for hard cider.',
- 'image': 'https://media.npr.org/assets/img/2017/11/22/hard_cider-1.jpg',
- 'imageAttribution': 'Adhiti Bandlamudi/NPR',
- 'lastPublishDate': '2017-12-20T09:09:19-05:00',
- 'organization': 'NPR',
- 'slug': 'The Salt',
- 'slugId': '139941248',
- 'title': 'Craft Hard Cider Is On A Roll. How Ya Like Them Apples?'}
+  { 
+    'byline': 'Adhiti Bandlamudi',
+    'caption': 'Apples used for hard cider.',
+    'image': 'https://media.npr.org/assets/img/2017/11/22/hard_cider-1.jpg',
+    'imageAttribution': 'Adhiti Bandlamudi/NPR',
+    'lastPublishDate': '2017-12-20T09:09:19-05:00',
+    'organization': 'NPR',
+    'slug': 'The Salt',
+    'slugId': '139941248',
+    'title': 'Craft Hard Cider Is On A Roll. How Ya Like Them Apples?'
+  }
 
 Because they are in the namespace, you can use dot notation to access any of the first-level 
 variables:
