@@ -73,7 +73,7 @@ and you can access these in the asset dictionary:
 
 **output**:
 
-.. code-block:: json
+.. code-block:: python
 
   { 
     'byline': 'Adhiti Bandlamudi',
