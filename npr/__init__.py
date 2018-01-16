@@ -135,6 +135,8 @@ def errors(response):
     return c
         
 def refresh():
+    f=open(configfile,'r')
+    config = ast.literal_eval(f.read())
     if 'refresh_token' in config:
         tokenEndpoint = 'https://api.npr.org/authorization/v2/token'
         tokenHeaders = {'Accept': 'application/json'}
