@@ -103,7 +103,7 @@ def logout():
         config = ast.literal_eval(f.read())
         config.pop('token', None)
         f=open(configfile,'w+')
-        f.write(str(conf))
+        f.write(str(config))
         print('User logged off.')
     else:
         print('No config.  User logged out.')
