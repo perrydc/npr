@@ -273,6 +273,51 @@ class Search(Api):
         self.endpoint = self.domain + "/listening/v2/search/recommendations?searchTerms=" + query
         self.response = testr(self.endpoint,self.headers)
 
+        self.a = {'episodes':[],'podcasts':[],'stories':[]}
+        for item in self.response['items']:
+            image = ''
+            credit = ''
+            if 'affiliationMeta' in item['attributes']: #this is a podcast
+                self.a['podcasts'].append(item['attributes']['affiliationMeta']['title'])
+                #logo = item['links']['image'][0]['href']
+                for jsonBlock in item['items']:
+                    self.a['episodes'].append(self.defineAssets(jsonBlock))
+            else:
+                self.a['stories'].append(self.defineAssets(item))
+
+        self.__dict__.update(self.a)
+        
+    def defineAssets(self, jsonBlock):
+        a = {}
+        image = ''
+        credit = ''
+        program = ''
+        if 'program' in jsonBlock['attributes']:
+            program = jsonBlock['attributes']['program']
+        title = jsonBlock['attributes']['title']
+        link = 'https://one.npr.org/?sharedMediaId=' + jsonBlock['attributes']['uid']
+        date = jsonBlock['attributes']['date']
+        description = jsonBlock['attributes']['description']
+        if 'image' in jsonBlock['links']:
+            image = jsonBlock['links']['image'][0]['href']
+            for i in jsonBlock['links']['image']:
+                if i['rel'] == 'wide':
+                    image = i['href']
+                    if 'producer' in i:
+                        credit = i['producer'] + '/' + i['provider']
+                    elif 'provider' in i:
+                        credit = i['provider']
+        a.update({
+            'program':program,
+            'title':title,
+            'link':link,
+            'date':date,
+            'description':description,
+            'image':image,
+            'credit':credit
+        })
+        return a
+
 class Channels(Api):
     def __init__(self, exploreOnly='false'):
         Api.__init__(self)
@@ -302,11 +347,15 @@ class Agg(Api):
 class Station(Api):
     def __init__(self, query, lon=0):
         Api.__init__(self)
-        self.endpoint = self.domain + "/stationfinder/v3/stations/" + str(query)
-        self.response = testr(self.endpoint,self.headers)
-        #self.streams = self.response['links']['streams']
-        self.a = self.defineAssets(self.response)
-        self.__dict__.update(self.a)
+        if type(query) != str:
+            self.endpoint = self.domain + "/stationfinder/v3/stations/" + str(query)
+            self.response = testr(self.endpoint,self.headers)
+            #self.streams = self.response['links']['streams']
+            self.a = self.defineAssets(self.response)
+            self.__dict__.update(self.a)
+        else:
+            error = 'Expected orgId, got "'+query+'" try: Stations("'+query+'")'
+            print(error)
     
     def unwrap(self, stream):
         if re.search(r'pls$',stream):
@@ -413,8 +462,7 @@ class One(Api):
         self.post.update({'rating':'COMPLETED'})
         self.advancePlayer()
 
-def docs():
-    docs = """station = npr.Station(305) # lookup station by orgId
+x = """station = npr.Station(305) # lookup station by orgId
 station.a # quick-reference of variables in namespace
 station.unwrap(station.stream) # some streams need to be unwrapped for use by FFMPEG
 station.pretty() # print raw api response
@@ -448,4 +496,7 @@ npr.auth()
 npr.deauth()
 npr.login()
 npr.logout()"""
-    print(docs)
+
+#deprecated code
+def docs():
+    print(x)
