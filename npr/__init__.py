@@ -205,6 +205,7 @@ class Story(Api):
 
     def defineAssets(self, jsonBlock):
         a = {}
+        a.update({'link':jsonBlock['href']})
         for resource in jsonBlock['resources']:
             if 'type' in resource and 'value' in resource:
                 a.update({resource['type']:resource['value']})
@@ -240,13 +241,13 @@ class Stories(Story):
     def defineAssets(self, jsonBlock):
         a = {}
         titles = []
-        for story in self.response['listItems']:
-            titles.append(story['title'])
-        a.update({'titles':titles})
         ids = []
+        links = []
         for story in self.response['listItems']:
             ids.append(story['externalId'])
-        a.update({'titles':titles, 'ids':ids})
+            titles.append(story['title'])
+            links.append(story['href'])
+        a.update({'titles':titles, 'ids':ids, 'links':links})
         return a
 
 class User(Api):
@@ -273,15 +274,18 @@ class Search(Api):
         self.endpoint = self.domain + "/listening/v2/search/recommendations?searchTerms=" + query
         self.response = testr(self.endpoint,self.headers)
 
-        self.a = {'episodes':[],'podcasts':[],'stories':[]}
+        self.a = {'podcasts':[],'stories':[]}
         for item in self.response['items']:
             image = ''
             credit = ''
             if 'affiliationMeta' in item['attributes']: #this is a podcast
-                self.a['podcasts'].append(item['attributes']['affiliationMeta']['title'])
-                #logo = item['links']['image'][0]['href']
+                agg = item['attributes']['affiliation']
+                title = item['attributes']['affiliationMeta']['title']
+                logo = item['links']['image'][0]['href']
+                episodes = []
                 for jsonBlock in item['items']:
-                    self.a['episodes'].append(self.defineAssets(jsonBlock))
+                    episodes.append(self.defineAssets(jsonBlock))
+                self.a['podcasts'].append({'title':title, 'logo':logo, 'episodes':episodes})
             else:
                 self.a['stories'].append(self.defineAssets(item))
 
@@ -312,7 +316,6 @@ class Search(Api):
             'title':title,
             'link':link,
             'date':date,
-            'description':description,
             'image':image,
             'credit':credit
         })
