@@ -14,7 +14,6 @@ import requests,json,re,os,ast,sys,time,datetime
 debug = 1
 configfile = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'npr.conf')
 #configfile = 'npr.conf' #dev mode (comment out above) 1.2.0
-
 def fetchConfig():
     if os.path.isfile(configfile):
         f=open(configfile,'r')
@@ -29,6 +28,8 @@ def fetchConfig():
         print('config file is missing.  Try npr.clientauth() or npr.auth()')
         config = {}
         return config
+
+config = fetchConfig()
 
 def promptauth():
     print("To authenticate your app:")
