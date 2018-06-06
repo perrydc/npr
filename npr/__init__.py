@@ -206,24 +206,27 @@ class Story(Api):
 
     def defineAssets(self, jsonBlock):
         a = {}
-        a.update({'link':jsonBlock['href']})
-        for resource in jsonBlock['resources']:
-            if 'type' in resource and 'value' in resource:
-                a.update({resource['type']:resource['value']})
-            if resource['type'] == 'slug':
-                a.update({'slug':resource['title']})
-                a.update({'slugId':resource['externalId']})
-            if resource['type'] == 'byline':
-                authors = []
-                for author in resource['authors']:
-                    authors.append(author['title'])
-                a.update({'byline':', '.join(authors)})
-            if resource['type'] == 'image':
-                a.update({'imageAttribution':resource['attribution']})
-                a.update({'caption':resource['title']})
-                for crop in resource['crops']:
-                    if crop['primary'] == True:
-                        a.update({'image':crop['href']})
+        try:
+            a.update({'link':jsonBlock['href']})
+            for resource in jsonBlock['resources']:
+                if 'type' in resource and 'value' in resource:
+                    a.update({resource['type']:resource['value']})
+                if resource['type'] == 'slug':
+                    a.update({'slug':resource['title']})
+                    a.update({'slugId':resource['externalId']})
+                if resource['type'] == 'byline':
+                    authors = []
+                    for author in resource['authors']:
+                        authors.append(author['title'])
+                    a.update({'byline':', '.join(authors)})
+                if resource['type'] == 'image':
+                    a.update({'imageAttribution':resource['attribution']})
+                    a.update({'caption':resource['title']})
+                    for crop in resource['crops']:
+                        if crop['primary'] == True:
+                            a.update({'image':crop['href']})
+        except:
+            a.update({'error':'try .pretty() to trouble-shoot'})
         return a
 
 class Stories(Story):
@@ -244,11 +247,14 @@ class Stories(Story):
         titles = []
         ids = []
         links = []
-        for story in self.response['listItems']:
-            ids.append(story['externalId'])
-            titles.append(story['title'])
-            links.append(story['href'])
-        a.update({'titles':titles, 'ids':ids, 'links':links})
+        try:
+            for story in self.response['listItems']:
+                ids.append(story['externalId'])
+                titles.append(story['title'])
+                links.append(story['href'])
+            a.update({'titles':titles, 'ids':ids, 'links':links})
+        except:
+            a.update({'error':'try .pretty() to trouble-shoot'})
         return a
 
 class User(Api):
@@ -261,12 +267,15 @@ class User(Api):
         
     def defineAssets(self, jsonBlock):
         a = {}
-        id = jsonBlock['attributes']['id']
-        email = jsonBlock['attributes']['email']
-        name = jsonBlock['attributes']['firstName'] + " " + jsonBlock['attributes']['lastName']
-        station = jsonBlock['attributes']['organizations'][0]['displayName']
-        cohort = jsonBlock['attributes']['cohort']['id']
-        a.update({'id':id, 'name':name, 'station':station, 'email':email, 'cohort':cohort})
+        try:
+            id = jsonBlock['attributes']['id']
+            email = jsonBlock['attributes']['email']
+            name = jsonBlock['attributes']['firstName'] + " " + jsonBlock['attributes']['lastName']
+            station = jsonBlock['attributes']['organizations'][0]['displayName']
+            cohort = jsonBlock['attributes']['cohort']['id']
+            a.update({'id':id, 'name':name, 'station':station, 'email':email, 'cohort':cohort})
+        except:
+            a.update({'error':'try .pretty() to trouble-shoot'})
         return a
 
 class Search(Api):
@@ -297,29 +306,32 @@ class Search(Api):
         image = ''
         credit = ''
         program = ''
-        if 'program' in jsonBlock['attributes']:
-            program = jsonBlock['attributes']['program']
-        title = jsonBlock['attributes']['title']
-        link = 'https://one.npr.org/?sharedMediaId=' + jsonBlock['attributes']['uid']
-        date = jsonBlock['attributes']['date']
-        description = jsonBlock['attributes']['description']
-        if 'image' in jsonBlock['links']:
-            image = jsonBlock['links']['image'][0]['href']
-            for i in jsonBlock['links']['image']:
-                if i['rel'] == 'wide':
-                    image = i['href']
-                    if 'producer' in i:
-                        credit = i['producer'] + '/' + i['provider']
-                    elif 'provider' in i:
-                        credit = i['provider']
-        a.update({
-            'program':program,
-            'title':title,
-            'link':link,
-            'date':date,
-            'image':image,
-            'credit':credit
-        })
+        try:
+            if 'program' in jsonBlock['attributes']:
+                program = jsonBlock['attributes']['program']
+            title = jsonBlock['attributes']['title']
+            link = 'https://one.npr.org/?sharedMediaId=' + jsonBlock['attributes']['uid']
+            date = jsonBlock['attributes']['date']
+            description = jsonBlock['attributes']['description']
+            if 'image' in jsonBlock['links']:
+                image = jsonBlock['links']['image'][0]['href']
+                for i in jsonBlock['links']['image']:
+                    if i['rel'] == 'wide':
+                        image = i['href']
+                        if 'producer' in i:
+                            credit = i['producer'] + '/' + i['provider']
+                        elif 'provider' in i:
+                            credit = i['provider']
+            a.update({
+                'program':program,
+                'title':title,
+                'link':link,
+                'date':date,
+                'image':image,
+                'credit':credit
+            })
+        except:
+            a.update({'error':'try .pretty() to trouble-shoot'})
         return a
 
 class Channels(Api):
@@ -375,23 +387,26 @@ class Station(Api):
     
     def defineAssets(self, jsonBlock):
         a = {}
-        name = jsonBlock['attributes']['brand']['name']
-        id = jsonBlock['attributes']['orgId']
-        a.update({'id':id, 'name':name})
-        if 'streams' in jsonBlock['links']:
-            for stream in jsonBlock['links']['streams']:
-                if stream['isPrimaryStream'] and stream['typeId'] == "13":
-                    aac = stream['href']
-                elif stream['isPrimaryStream'] and stream['typeId'] == "10":
-                    mp3 = stream['href']
-                    a.update({'mp3': mp3})
-            try:
-                a.update({'stream': aac})
-            except:
+        try:
+            name = jsonBlock['attributes']['brand']['name']
+            id = jsonBlock['attributes']['orgId']
+            a.update({'id':id, 'name':name})
+            if 'streams' in jsonBlock['links']:
+                for stream in jsonBlock['links']['streams']:
+                    if stream['isPrimaryStream'] and stream['typeId'] == "13":
+                        aac = stream['href']
+                    elif stream['isPrimaryStream'] and stream['typeId'] == "10":
+                        mp3 = stream['href']
+                        a.update({'mp3': mp3})
                 try:
-                    a.update({'stream': mp3})
+                    a.update({'stream': aac})
                 except:
-                    pass
+                    try:
+                        a.update({'stream': mp3})
+                    except:
+                        pass
+        except:
+            a.update({'error':'try .pretty() to trouble-shoot'})
         return a
 
 class Stations(Station):
@@ -402,11 +417,14 @@ class Stations(Station):
         else:
             self.endpoint = self.domain + "/stationfinder/v3/stations?q=" + query
         self.response = testr(self.endpoint,self.headers)
-        self.a.update({'station':[]})
-        for station in self.response['items']:
-            self.a['station'].append(self.defineAssets(station))
-        #self.a.update(self.defineAssets(self.response['items'][0]))
-        self.a.update(self.a['station'][0])
+        try:
+            self.a.update({'station':[]})
+            for station in self.response['items']:
+                self.a['station'].append(self.defineAssets(station))
+            #self.a.update(self.defineAssets(self.response['items'][0]))
+            self.a.update(self.a['station'][0])
+        except:
+            pass
         self.__dict__.update(self.a)
 
 class One(Api):
@@ -419,23 +437,26 @@ class One(Api):
         
     def defineAssets(self):
         a = {}
-        self.mp3,self.aac = self.getaudio()
-        if self.aac != "":
-            audio = self.aac
-        else:
-            audio = self.mp3
-        title = self.response['items'][0]['attributes']['title']
-        self.start = datetime.datetime.utcnow()
-        self.post = {
-            'mediaId':self.response['items'][0]['attributes']['rating']['mediaId'],
-            'origin':self.response['items'][0]['attributes']['rating']['origin'],
-            'duration':self.response['items'][0]['attributes']['duration'],
-            'channel':self.response['items'][0]['attributes']['rating']['channel'],
-            'cohort':self.response['items'][0]['attributes']['rating']['cohort']
-        }
-        #id = jsonBlock['attributes']['id']
-        a.update({'title':title, 'audio':audio})
-        self.__dict__.update(a)
+        try:
+            self.mp3,self.aac = self.getaudio()
+            if self.aac != "":
+                audio = self.aac
+            else:
+                audio = self.mp3
+            title = self.response['items'][0]['attributes']['title']
+            self.start = datetime.datetime.utcnow()
+            self.post = {
+                'mediaId':self.response['items'][0]['attributes']['rating']['mediaId'],
+                'origin':self.response['items'][0]['attributes']['rating']['origin'],
+                'duration':self.response['items'][0]['attributes']['duration'],
+                'channel':self.response['items'][0]['attributes']['rating']['channel'],
+                'cohort':self.response['items'][0]['attributes']['rating']['cohort']
+            }
+            #id = jsonBlock['attributes']['id']
+            a.update({'title':title, 'audio':audio})
+            self.__dict__.update(a)
+        except:
+            a.update({'error':'try .pretty() to trouble-shoot'})
         self.a = a
         
     def getaudio(self):
