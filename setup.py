@@ -27,7 +27,7 @@ setup(name='npr',
       author_email='dperry@npr.org',
       license='MIT',
       install_requires=[
-          'requests','future','requests[security];python_version<"2.9"',
+          'requests','future','requests[security];python_version<"2.9"','algoliasearch',
       ],
       packages=find_packages(exclude=['tests*']),
       keywords='public, radio, stream, metadata, api, service, npr')

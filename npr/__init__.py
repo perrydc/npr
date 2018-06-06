@@ -10,6 +10,20 @@ from builtins import object
 from future import standard_library
 standard_library.install_aliases()
 import requests,json,re,os,ast,sys,time,datetime
+from algoliasearch import algoliasearch
+
+def searchall(query):
+    client = algoliasearch.Client("1SS7XPOA8X", '9375902912f6f82964c8ec269234b3c2')
+    index = client.init_index('nprorg')
+    res = index.search(query, 
+      {'hitsPerPage': 10}
+    )
+    # for audio-only search, add 'hasAudio:true', to filters above.
+    #storyIDs = [i['objectID'] for i in res['hits']]
+    try:
+        return res['hits']
+    except:
+        return res
 
 debug = 1
 configfile = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'npr.conf')
@@ -507,7 +521,8 @@ user = npr.User() # data on the logged in user
 player = npr.One() # create a NPR One player object
 player.skip() # player.complete()
 
-query = npr.Search('hidden')
+query = npr.Search('hidden') #search stories with audio
+query = npr.searchall('Online Shopping') #search all stories
 
 hiddenBrain = npr.Agg('510308') # the aggId is listed as the 'affiliation' in search
 hiddenBrain.pretty()

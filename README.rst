@@ -216,6 +216,7 @@ Endpoint classes:
 	| **npr.Stations('query')** - returns metadata about NPR stations that match a query (call letters, zip code, city, or any indexed value)
 	| **npr.Stations(lat,lon)** - returns metadata about NPR stations at a location (lon should be negative, because all our stations are west of the meridian)
 	| **npr.Search('query')** - returns programs or episode titles with a term that matches your 'query'
+	| **npr.searchall('query')** - returns any story with a term that matches your 'query'
 	| **npr.User()** - returns data (including content preferences) about the logged in user
 	| **npr.Recommend()** - returns a list of recommended audio for the logged in user.
 	| **npr.One()** - Like recommend, except you can advance to the next segment via skip() and complete()
