@@ -510,12 +510,6 @@ s.find('88.5') # reverse lookup response keys by value
 stations = npr.Stations(38.9072,-77.0369) # npr.Stations('22205') | npr.Stations('WAMU')
 stations.station[0]['name'] # example of quick-reference across a list
 
-story = npr.Story(565664321) # lookup story by id
-story.title
-
-stories = npr.Stories() # lookup top stories
-stories.titles
-
 user = npr.User() # data on the logged in user
 
 player = npr.One() # create a NPR One player object

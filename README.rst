@@ -46,59 +46,46 @@ Fill in your application ID and secret at the prompts.  Once verified, you must 
 The script will poll the npr auth server every 5 seconds until you login and it gets a token.  
 Then it will store your token and you shant (SHANT!) have to do this again.
 
-Example data fetch:
--------------------
-
-.. code-block:: python
-
-  station = npr.Station(309)
-  station.stream
-
-**output**:
-
-.. code-block:: bash 
-
-  'https://stream.wbez.org/wbez128.mp3'
-
 Common variables:
 -----------------
-
 The most common variables for many classes have already been loaded into the namespace, 
 and you can access these in the asset dictionary:
 
 .. code-block:: python
 
-  story = npr.Story(565664321)
-  story.a
+  stations = npr.Stations('boston')
+  stations.a
 
 **output**:
 
-.. code-block:: bash
-
-  { 
-    'byline': 'Adhiti Bandlamudi',
-    'caption': 'Apples used for hard cider.',
-    'image': 'https://media.npr.org/assets/img/2017/11/22/hard_cider-1.jpg',
-    'imageAttribution': 'Adhiti Bandlamudi/NPR',
-    'lastPublishDate': '2017-12-20T09:09:19-05:00',
-    'organization': 'NPR',
-    'slug': 'The Salt',
-    'slugId': '139941248',
-    'title': 'Craft Hard Cider Is On A Roll. How Ya Like Them Apples?'
-  }
+.. code-block:: bash 
+    {'id': '330',
+     'mp3': 'https://icecast-stream.wbur.org/wbur_nprorg',
+     'name': 'WBUR',
+     'station': [{'id': '330',
+       'mp3': 'https://icecast-stream.wbur.org/wbur_nprorg',
+       'name': 'WBUR',
+       'stream': 'https://icecast-stream.wbur.org/wbur.aac'},
+      {'id': '396',
+       'mp3': 'https://streams.audio.wgbh.org:8200/wgbh',
+       'name': 'WGBH Radio',
+       'stream': 'https://streams.audio.wgbh.org:8200/wgbh'},
+      {'id': '168809220', 'name': 'WGBH'}],
+     'stream': 'https://icecast-stream.wbur.org/wbur.aac'}
 
 Because they are in the namespace, you can use dot notation to access any of the first-level 
 variables:
 
 .. code-block:: python
 
-  story.title
+  stations.stream
 
 **output**:
 
-.. code-block:: python
+.. code-block:: bash 
 
-  'Craft Hard Cider Is On A Roll. How Ya Like Them Apples?'
+  'https://icecast-stream.wbur.org/wbur.aac'
+  
 
 Custom variables:
 -----------------
@@ -222,7 +209,6 @@ Endpoint classes:
 	| **npr.One()** - Like recommend, except you can advance to the next segment via skip() and complete()
 	| **npr.Agg()** - returns audio segments from the selected aggregation (aka affiliation)
 	| **npr.Channels()** - returns channels from the explore tab, which, along with fetch(row) will also return segments.
-	| **npr.Story(storyId)** - returns story assets from the reading service.
 	
 Endpoint helper functions:
 --------------------------
